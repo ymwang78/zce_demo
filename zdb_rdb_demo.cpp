@@ -111,7 +111,7 @@ static void __zdb_rdb_test_conn(const zce_smartptr<zdb_database>& db_ptr) {
 
 void __zdb_rdb_test_sqlite()
 {
-    zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_SQLITE, "test2.db?dbkey=zhidu2015$$$$$$;PRAGMA synchronous=NORMAL;PRAGMA journal_mode=WAL"));
+    zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_SQLITE, "test2.db?dbkey=testpasswd;PRAGMA synchronous=NORMAL;PRAGMA journal_mode=WAL"));
     //zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_SQLITE, "test1.db?PRAGMA synchronous=NORMAL;PRAGMA journal_mode=WAL"));
 
     ///* user:passwd@host:port/dbname */
@@ -123,7 +123,7 @@ void __zdb_rdb_test_sqlite()
 void __zdb_rdb_test_pgsql()
 {
     ///* user:passwd@host:port/dbname */
-    zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_PGSQL, "zhidup:pwdzhiduprl@10.162.103.217:5432/test"));
+    zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_PGSQL, "zhidu:testpasswd@10.162.103.217:5432/test"));
     __zdb_rdb_test_conn(db_ptr);
 }
 
