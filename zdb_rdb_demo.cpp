@@ -115,7 +115,7 @@ void __zdb_rdb_test_sqlite()
     //zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_SQLITE, "test1.db?PRAGMA synchronous=NORMAL;PRAGMA journal_mode=WAL"));
 
     ///* user:passwd@host:port/dbname */
-    //zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_MYSQL, "zdtest:RDB_test@rdsbjb2y3qqjnm3.mysql.rds.aliyuncs.com:3306/zdtest"));
+    //zce_smartptr<zdb_database> db_ptr(new zdb_database(zdb_database::ERV_DATABASE_MYSQL, "zdtest:testpasswd@127.0.0.1:3306/zdtest"));
 
     __zdb_rdb_test_conn(db_ptr);
 }
