@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zdlua>
+    <zdlua_info service_name="TEST" 
+        loglevel="0" >
+        <server seq="100" id="1001127000000001" name="test lua server" />
+        <storm addr="127.0.0.1" port="21010" user="" pass="" name="" />
+        <redis addr="" port="" user="" pass="" name="" />
+        <mongo addr="" port="" user="" pass="" name="" />
+        <zcoin addr="" port="" user="" pass="" name="" />
+    </zdlua_info>
+</zdlua>
