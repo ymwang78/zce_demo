@@ -38,7 +38,7 @@ function _M.test_me()
 
 	-- c.new_service("test_rpccli", "lua\\test\\test_rpc_client.lua", tpool)
 
-	-- c.new_service("test_pgsql", "lua\\test\\test_pgsql.lua")
+	c.new_service("test_pgsql", "lua\\test\\test_pgsql.lua")
 
 	c.new_service("rawsvr", "lua\\test\\test_rawsocket_server.lua")
 
