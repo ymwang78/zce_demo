@@ -16,6 +16,8 @@ function _M.test_me()
 
 	local ok, tpool = c.new_threadpool(2)
 
+	c.new_service("test_storm", "lua\\test\\test_storm.lua", tpool)
+
 	-- c.new_service("test_cjson", "lua\\test\\test_cjson.lua", tpool)
 
 	-- c.new_service("test_timer", "lua\\test\\test_timer.lua", tpool)
@@ -38,13 +40,13 @@ function _M.test_me()
 
 	-- c.new_service("test_rpccli", "lua\\test\\test_rpc_client.lua", tpool)
 
-	c.new_service("test_pgsql", "lua\\test\\test_pgsql.lua")
+	-- c.new_service("test_pgsql", "lua\\test\\test_pgsql.lua")
 
-	c.new_service("rawsvr", "lua\\test\\test_rawsocket_server.lua")
+	-- c.new_service("rawsvr", "lua\\test\\test_rawsocket_server.lua")
 
 	-- c.new_service("websvr", "lua\\test\\test_websocket_server.lua")
 
-	c.new_service("rawcli", "lua\\test\\test_rawsocket_client.lua")
+	-- c.new_service("rawcli", "lua\\test\\test_rawsocket_client.lua")
 
 end
 
