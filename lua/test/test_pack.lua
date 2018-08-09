@@ -32,8 +32,8 @@ function TestListCompare:test_pack()
 	c.dump_stack(t3)
     lu.assertEquals( t1, t3 )
 
-    ok, v = c.pack(nil, true, "hello", -123, 123, -12345, 12345, t1, 1234567890123, -1234567890123)
-    v0, v1, v2, v3, v4, v5, v6, v7, v8, v9 = c.unpack(v)
+    ok, v = c.pack(nil, true, "hello", -123, 123, -12345, 12345, t1, 1234567890123, -1234567890123, "")
+    v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10 = c.unpack(v)
     lu.assertEquals( v0, nil )
     lu.assertEquals( v1, true )
     lu.assertEquals( v2, "hello" )
@@ -44,13 +44,16 @@ function TestListCompare:test_pack()
     lu.assertEquals( v7, t1 )
     lu.assertEquals( v8, 1234567890123 )
     lu.assertEquals( v9, -1234567890123 )
+	lu.assertEquals( v10, "" )
 end
 
 function TestListCompare:test_md5()
 	v0 = c.encode_md5("TestListCompare:test_md5") -- default lower case
 	v1 = c.encode_md5("TestListCompare:test_md5", false) -- output lower case
 	v2 = c.encode_md5("TestListCompare:test_md5", true) -- output upper case
-	c.dump_stack(v0, v1, v2)
+	lu.assertEquals( v0, "0630ed1d356c66c6c9ebd19d7f182fc3")
+	lu.assertEquals( v1, "0630ed1d356c66c6c9ebd19d7f182fc3")
+	lu.assertEquals( v2, "0630ED1D356C66C6C9EBD19D7F182FC3")
 end
 
 function TestListCompare:test_base64()

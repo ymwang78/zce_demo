@@ -14,21 +14,38 @@ rdb_query: 返回是否成功和关系表（如果成功），关系表第一行是字段名，后续是行数据
 --]]
 
 local c = require "zce.core"
+local lu = require('luaunit')
 
 c.rdb_initpool(16)
 
-ok, pgdb = c.rdb_conn("pgsql", "hawk:zhiduhawk@pgsql.svr:3300/hawk")
-print ("pgsql", ok)
+TestPgSql = {}
 
-ok, res = c.rdb_query(pgdb, "select * from users limit ?", 100)
+function TestPgSql:test_pgsql()
 
-print ("pgsql", #res, c.tojson(res[0]), c.tojson(res[1]), c.tojson(res[2]))
+	local ok, pgdb = c.rdb_conn("pgsql", "hawk:zhiduhawk@pgsql.svr:3300/hawk")
+	lu.assertEquals( ok, true )
 
--- 第二个参数如果是true，结果以数组形式返回
-ok, res = c.rdb_query(pgdb, true, "select * from users limit ?", 100)
+	local ok, res = c.rdb_query(pgdb, "select * from users limit ?", 100)
+	lu.assertEquals( ok, true )
 
-print ("pgsql", #res, c.tojson(res[0]), c.tojson(res[1]), c.tojson(res[2]))
+	local ok, res = c.rdb_query(pgdb, "select * from users where iid = ?", 1)
+	lu.assertEquals( ok, true )
+	-- c.log(1, "\t", c.tojson(res))
+	lu.assertEquals( res[1].pid, 10000000 )
 
-ok, res = c.rdb_query(pgdb, "update users set nick = ? where iid = 10000000", "mynick")
+	-- print ("pgsql", #res, c.tojson(res[0]), c.tojson(res[1]), c.tojson(res[2]))
 
-print ("pgsql", ok, res, #res,  c.tojson(res[0]), c.tojson(res[1]), c.tojson(res[2]))
+	-- 第二个参数如果是true，结果以数组形式返回
+	local ok, res = c.rdb_query(pgdb, true, "select * from users limit ?", 100)
+	lu.assertEquals( ok, true )
+
+	-- print ("pgsql", #res, c.tojson(res[0]), c.tojson(res[1]), c.tojson(res[2]))
+
+	local ok, res = c.rdb_query(pgdb, "update users set nick = ? where iid = 10000000", "mynick")
+	lu.assertEquals( ok, true )
+
+	-- print ("pgsql", ok, res, #res,  c.tojson(res[0]), c.tojson(res[1]), c.tojson(res[2]))
+
+end
+
+lu.run()

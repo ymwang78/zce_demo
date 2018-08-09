@@ -1,34 +1,57 @@
 local c = require "zce.core"
+local lu = require('luaunit')
+
+TestStorm = {}
 
 local ok, serveobj = c.storm_serve(1000, "0.0.0.0", 3500) --reactorobj, 
+lu.assertEquals( ok, true )
+
 
 local function on_storm_data(oid, topic, from, data, ctx)
 	c.log(1, "\t", oid, topic, from, data, ctx)
+	ctx.counter = ctx.counter + 1
 end
 
-local ok, clientobj1 = c.storm_connect(1001, "127.0.0.1", 3500, on_storm_data, { ctx = "context"})
+function TestStorm:test_storm()
 
-local ok, clientobj2 = c.storm_connect(1002, "127.0.0.1", 3500, on_storm_data, { ctx = "context"})
+    ctx = {}
+	ctx.counter = 0
+    
+	local ok, clientobj1 = c.storm_connect(1001, "127.0.0.1", 3500, on_storm_data, ctx)
+	lu.assertEquals( ok, true )
 
-c.usleep(2000)
+	local ok, clientobj2 = c.storm_connect(1002, "127.0.0.1", 3500, on_storm_data, ctx)
+	lu.assertEquals( ok, true )
 
-local test_topic = 12345
+	c.usleep(200)
+	
+	local test_topic = 12345
 
-c.storm_subscribe(clientobj1, test_topic)
-c.storm_subscribe(clientobj2, test_topic)
+	c.storm_subscribe(clientobj1, test_topic)
+	c.storm_subscribe(clientobj2, test_topic)
 
-c.usleep(2000)
+	c.usleep(200)
 
-
-local counter = 0
-
-function timer_publish(timerobj, now, tick, ctx)
 	c.storm_publish(clientobj1, test_topic, "hello, storm")
-	-- local ok, newt = c.timer_start(reatorobj, 100, false, timer_print_fast, { ctx = "tablectx" })
-	counter = counter + 1
-	if counter == 10 then
-		c.storm_unsubscribe(clientobj1, test_topic)
-	end
+
+	c.usleep(200)
+
+	lu.assertEquals( 2, ctx.counter )
+
+	c.storm_publish(clientobj1, test_topic, "hello, storm")
+
+	c.usleep(200)
+
+	lu.assertEquals( 4, ctx.counter )
+
+	c.storm_unsubscribe(clientobj1, test_topic)
+
+	c.storm_publish(clientobj1, test_topic, "hello, storm")
+
+	c.usleep(200)
+
+	lu.assertEquals( 5, ctx.counter )
+
 end
 
-c.timer_start(1000, true, timer_publish, { ctx = "tablectx" })
+lu.run()

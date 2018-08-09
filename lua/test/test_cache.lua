@@ -6,9 +6,8 @@ local lu = require('luaunit')
 
 TestCache = {}
 
-local c = require "zce.core"
-
 local ok, reactorobj = c.reactor_start()
+lu.assertEquals( ok, true )
 
 function do_test(localdb0)
 

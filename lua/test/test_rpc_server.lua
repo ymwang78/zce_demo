@@ -1,32 +1,65 @@
---[[
+ï»¿--[[
 
-RPC·şÎñ¶ËµÄ´úÂë¸úLPCÊÇÒ»ÑùµÄ£¬Î¨Ò»Çø±ğÊÇĞèÒªµ÷ÓÃÒ»´Îrpc_serveÀ´×¢²á¼àÌı¶Ë¿Ú
-rpc_serve
--- ²ÎÊı1£ºRPCÀàĞÍ
--- ºóĞø²ÎÊı£¬RPC·şÎñĞèÒªµÄ²ÎÊı
+lpcæœåŠ¡å‡½æ•°æ˜¯æ™®é€šçš„LUAå‡½æ•°ï¼Œä¼ å…¥çš„å‚æ•°å‰ä¸¤ä¸ªæ˜¯å›ºå®šçš„ï¼Œåç»­çš„æ˜¯RPCå‚æ•°
+-- sid  ï¼šè¡¨æ˜è¿™ä¸ªRPCè°ƒç”¨çš„SESSION IDï¼Œå¯é€šè¿‡è¿™ä¸ªsidé€šè¿‡rpc_responseå‡½æ•°è¿”å›ç»“æœç»™è°ƒç”¨è€…ï¼Œåªèƒ½ç”¨ä¸€æ¬¡ï¼Œåç»­çš„è°ƒç”¨ä¼šè¢«ä¸¢å¼ƒ
+-- from ï¼šè¡¨æ˜è°ƒç”¨çš„æ¥æºæœåŠ¡åï¼Œä»new_serviceæ³¨å†Œçš„æœåŠ¡åï¼ˆä¸»æ–‡ä»¶å…¥åº“é»˜è®¤ä¸º"main"ï¼‰
 
-ÓëlpcÒ»Ñù£¬rpc·şÎñº¯ÊıÊÇÆÕÍ¨µÄLUAº¯Êı£¬´«ÈëµÄ²ÎÊıÇ°Á½¸öÊÇ¹Ì¶¨µÄ£¬ºóĞøµÄÊÇRPC²ÎÊı
--- sid  £º±íÃ÷Õâ¸öRPCµ÷ÓÃµÄSESSION ID£¬¿ÉÍ¨¹ıÕâ¸ösidÍ¨¹ırpc_responseº¯Êı·µ»Ø½á¹û¸øµ÷ÓÃÕß£¬Ö»ÄÜÓÃÒ»´Î£¬ºóĞøµÄµ÷ÓÃ»á±»¶ªÆú
--- from £º±íÃ÷µ÷ÓÃµÄÀ´Ô´·şÎñÃû£¬´Ónew_service×¢²áµÄ·şÎñÃû£¨Ö÷ÎÄ¼şÈë¿âÄ¬ÈÏÎª"main"£©
+rpc_response ç›´æ¥è¿”å›ç»“æœï¼Œç¬¬ä¸€ä¸ªå‚æ•°å›ºå®šæ˜¯SID, åé¢æ˜¯è¿”å›å‚æ•°
+-- sid ï¼šåŒä¸Š
 
-rpc_response Ö±½Ó·µ»Ø½á¹û£¬µÚÒ»¸ö²ÎÊı¹Ì¶¨ÊÇSID, ºóÃæÊÇ·µ»Ø²ÎÊı
--- sid £ºÍ¬ÉÏ
-
-rpc_suspend ÎªÁË·ÀÖ¹RPCµ÷ÓÃÍü¼Çµ÷ÓÃrpc_response£¬µ¼ÖÂrpc_callÎŞÏŞÖÆµÈ´ı£¬
-ÌØµØÔö¼Órpc_suspend,¸æËßRPC·şÎñº¯Êı±¾º¯Êı²»·µ»Ø½á¹û£¬SID¼Ç×¡ºóÍíÒ»µãÔÙ·µ»Ø£¬»òÕßÓÉÆäËûº¯Êı·µ»Ø
-Èç¹ûÔÙLPC·şÎñº¯ÊıÀï¼È²»µ÷ÓÃrpc_response£¬Ò²²»µ÷ÓÃrpc_suspend£¬µ÷ÓÃÕß½«Ö±½ÓÊÕµ½Ò»¸ö·µ»ØÎª¿ÕµÄ½á¹û
-²ÎÊıµÚÒ»¸öÎªsid, µÚ¶ş¸öÊÇ³¬Ê±Ê±¼ä£¬Èç¹û¹ıÁË³¬Ê±Ê±¼ä£¬RPCµ÷ÓÃÕß»áÊÕµ½Ò»¸ö¿ÕµÄ½á¹û£¬ºóĞøÔÙµ÷ÓÃrpc_response½«±»¶ªÆú
+rpc_suspend ä¸ºäº†é˜²æ­¢RPCè°ƒç”¨å¿˜è®°è°ƒç”¨rpc_responseï¼Œå¯¼è‡´rpc_callæ— é™åˆ¶ç­‰å¾…ï¼Œ
+ç‰¹åœ°å¢åŠ rpc_suspend,å‘Šè¯‰RPCæœåŠ¡å‡½æ•°æœ¬å‡½æ•°ä¸è¿”å›ç»“æœï¼ŒSIDè®°ä½åæ™šä¸€ç‚¹å†è¿”å›ï¼Œæˆ–è€…ç”±å…¶ä»–å‡½æ•°è¿”å›
+å¦‚æœå†LPCæœåŠ¡å‡½æ•°é‡Œæ—¢ä¸è°ƒç”¨rpc_responseï¼Œä¹Ÿä¸è°ƒç”¨rpc_suspendï¼Œè°ƒç”¨è€…å°†ç›´æ¥æ”¶åˆ°ä¸€ä¸ªè¿”å›ä¸ºç©ºçš„ç»“æœ
+å‚æ•°ç¬¬ä¸€ä¸ªä¸ºsid, ç¬¬äºŒä¸ªæ˜¯è¶…æ—¶æ—¶é—´ï¼Œå¦‚æœè¿‡äº†è¶…æ—¶æ—¶é—´ï¼ŒRPCè°ƒç”¨è€…ä¼šæ”¶åˆ°ä¸€ä¸ªç©ºçš„ç»“æœï¼Œåç»­å†è°ƒç”¨rpc_responseå°†è¢«ä¸¢å¼ƒ
 
 --]]
 
 local c = require "zce.core"
+local lu = require('luaunit')
 
--- Æô¶¯RPC·şÎñ
+TestLpcSvr = {}
+
 local ok = c.rpc_serve("rpc", "0.0.0.0", 1218)
+lu.assertEquals( ok, true )
+
+local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
+lu.assertEquals( ok, true )
 
 function say_hello(sid, from, v0, v1)
-    print ("============recv", sid, from, v0, v1, "\n")
-    c.rpc_suspend(sid, 5000) -- ¸æËßRPCµ÷ÓÃ×î³Ù5000ºÁÃë·µ»Ø½á¹û
-    c.rpc_response(sid, "hi", "response", 56789) --·µ»Ø½á¹û
+	c.log(1, " ", "request(say_hello):" , sid, from, v0, v1)
+    c.rpc_response(sid, "hi", "response", 56789)
 end
 
+function say_hello_timeout(sid, from, v0, v1)
+	c.log(1, " ", "request(say_hello_timeout):" , sid, from, v0, v1)
+	c.usleep(6 * 1000)
+    c.rpc_response(sid, "hi", "response", 56789)
+end
+
+function say_hello_noresponse(sid, from, v0, v1)
+	c.log(1, " ", "request(say_hello_noresponse):" , sid, from, v0, v1)
+end
+
+function say_hello_delay(sid, from, v0, v1)
+	c.rpc_suspend(sid, 10000) -- é»˜è®¤è¶…æ—¶5ç§’ï¼Œå‘Šè¯‰ç³»ç»Ÿæœ€å¤šè¦10ç§’ï¼Œä½†æ˜¯å¯¹RPCæ— æ•ˆ
+	c.log(1, " ", "request(say_hello_delay):" , sid, from, v0, v1)
+	c.usleep(6 * 1000)
+    c.rpc_response(sid, "hi", "response", 56789)
+end
+
+function say_hello_cascade(sid, from, v0, v1)
+	c.log(1, " ", "request(say_hello_cascade):" , sid, from, v0, v1)
+	local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", v0, v1) -- å¯ä»¥å†æ¬¡å‘è‡ªå·±å‘èµ·ä¸€ä¸ªRPCè°ƒç”¨
+    c.rpc_response(sid,  v0, v1, v2) 
+end
+
+function TestLpcSvr:test_call_self()
+    local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", 2000, "abcd")
+	c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
+	lu.assertEquals( ok, true )
+end
+
+-- co = coroutine.create(test_locallpc)
+-- coroutine.resume(co)
+
+lu.run()
