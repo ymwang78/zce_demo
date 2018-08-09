@@ -1,0 +1,1 @@
+zdlua.exe --console
