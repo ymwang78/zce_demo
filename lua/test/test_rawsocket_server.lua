@@ -18,9 +18,9 @@ function on_rawsock_event(con, event, data)
             c.tcp_close(con);
         end
     elseif event == "DISC" then
-        c.tcp_send(con, "end\n"); -- 应该收不到
+        -- c.tcp_send(con, "end\n"); -- 应该收不到
     end
-    print(con.peerip, con.peerport, con.fd, event, data, connection_count)
+    c.log(1, " ", con.peerip, con.peerport, con.fd, event, data, connection_count)
     --]]
     --print(con.fd, event, data)
     return true
@@ -40,7 +40,7 @@ function on_rawsock_udp(con, event, data)
             c.udp_close(con);
         end
     elseif event == "DISC" then
-        c.udp_send(con, "end\n"); -- 应该收不到
+        -- c.udp_send(con, "end\n"); -- 应该收不到
     end
     print(con.peerip, con.peerport, con.fd, event, data, connection_count)
     --]]
@@ -50,3 +50,4 @@ end
 local ok2 = c.udp_listen(reactorobj, "raw", "0.0.0.0", 1215, on_rawsock_udp)
 
 c.log(1, "\t", "start listen raw socket ", ok1, ok2);
+

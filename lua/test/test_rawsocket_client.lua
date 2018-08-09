@@ -15,7 +15,7 @@ function on_rawsock_client(con, event, data)
         c.tcp_send(con, "\tbegin", 0, 6);
         c.tcp_send(con, "nome\tend\nnome", 4, 9);
     elseif event == "DISC" then
-        c.tcp_send(con, "end\n", 6); -- 应该收不到
+        -- c.tcp_send(con, "end\n", 6); -- 应该收不到
     end
     --]]
     --print(con.fd, event, data)
@@ -42,7 +42,7 @@ function on_rawudp_client(con, event, data)
         c.udp_send(con, "\tbegin", 0, 6);
         c.udp_send(con, "nome\tend\nnome", 4, 9);
     elseif event == "DISC" then
-        c.udp_send(con, "end\n", 6); -- 应该收不到
+        -- c.udp_send(con, "end\n", 6); -- 应该收不到
     end
     --]]
     --print(con.fd, event, data)
@@ -63,6 +63,6 @@ function raw_udpcli()
     end
 end
 
--- raw_tcpcli()
+raw_tcpcli()
 
-raw_udpcli()
+-- raw_udpcli()

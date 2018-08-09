@@ -1,6 +1,6 @@
 local c = require "zce.core"
 
-local ok0, code0, param0, body0 = c.http_request("GET", "http://www.baidu.com/", { ["Content-Type"] = "application/json"}, "")
+local ok0, code0, param0, body0 = c.http_request("GET", "https://www.baidu.com/", { ["Content-Type"] = "application/json"}, "")
 
 print (ok0, code0, param0, body0)
 
