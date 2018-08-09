@@ -6,3 +6,14 @@ ZDLUA 示例和测试工程
 
 运行方法：
 1. CD zdlua.exe所在目录，执行 zdlua.exe --console
+
+Linux 下载:
+
+    http://dist.zhidu.biz/vxserver/c7testing/
+
+Linux依赖库(Centos 7)：
+
+    rpm -ivh https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm
+    yum install postgresql94-libs
+    yum install boost
+
