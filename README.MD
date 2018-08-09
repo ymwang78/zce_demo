@@ -7,6 +7,9 @@ ZDLUA 示例和测试工程
 运行方法：
 1. CD zdlua.exe所在目录，执行 zdlua.exe --console
 
+Linux 下载:
+
+    http://dist.zhidu.biz/vxserver/c7testing/
 
 Linux依赖库(Centos 7)：
 
