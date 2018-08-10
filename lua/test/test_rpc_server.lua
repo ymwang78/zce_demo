@@ -19,7 +19,7 @@ local lu = require('luaunit')
 
 TestLpcSvr = {}
 
-local ok = c.rpc_serve("rpc", "0.0.0.0", 1218)
+local ok = c.rpc_serve("rpc", "0.0.0.0", 1218, "say_")
 lu.assertEquals( ok, true )
 
 local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
@@ -53,9 +53,18 @@ function say_hello_cascade(sid, from, v0, v1)
     c.rpc_response(sid,  v0, v1, v2) 
 end
 
+function norpc_say_hello(sid, from, v0, v1)
+    c.rpc_response(sid,  v0, v1, v2) 
+end
+
 function TestLpcSvr:test_call_self()
     local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", 2000, "abcd")
 	c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
+	lu.assertEquals( ok, true )
+
+	-- allow lpc call any method 
+	local ok, v0, v1, v2 = c.rpc_call(rpcid, "norpc_say_hello", 2000, "abcd")
+	c.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
 	lu.assertEquals( ok, true )
 end
 

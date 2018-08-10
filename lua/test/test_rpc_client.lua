@@ -21,6 +21,17 @@ function TestRpc:test_call()
 	lu.assertEquals( ok, true )
 end
 
+
+function TestRpc:test_call_notsecurity()
+	local ok, v0, v1, v2 = c.rpc_call(lpcid, "norpc_say_hello", "abcd", 12345)
+	c.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
+	lu.assertEquals( ok, true )
+
+	local ok, v0, v1, v2 = c.rpc_call(rpcid, "norpc_say_hello", "abcd", 12345)
+	c.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
+	lu.assertEquals( ok, false )
+end
+
 function TestRpc:test_call_timeout()
 	local ok, v0, v1, v2 = c.rpc_call(lpcid, "say_hello_timeout", "abcd", 12345)
 	c.log(1, " ", "response(say_hello_timeout):", ok, v0, v1, v2)
