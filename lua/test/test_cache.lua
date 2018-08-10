@@ -7,7 +7,10 @@ local lu = require('luaunit')
 TestCache = {}
 
 local ok, reactorobj = c.reactor_start()
+
 lu.assertEquals( ok, true )
+
+--------------------------- test redis cache ---------------------------
 
 function do_test(localdb0)
 
@@ -40,7 +43,9 @@ function do_test(localdb0)
 	lu.assertEquals( d, testval_double )
 	lu.assertEquals( t, testval_table )
 
+	-- c.log(1, "\t", "wait 6 sec to make key expire")
 	c.usleep(6000)
+	-- c.log(1, "\t", "wait end")
 
 	local ok, s, b, i, d, t = c.cache_get(localdb0, "test:v0")
 	lu.assertEquals( ok, false )
@@ -66,16 +71,30 @@ function TestCache:test_redis()
 
 	do_test(cachedb0)
 end
----------------------------
 
--- local cache 
+--------------------------- test local cache ---------------------------
+
+function TestCache:test_local_withreactorandschedule()
+
+	-- get scheduleobj created from main service
+	local ok, configdb = c.cache_init("local", "config")
+	lu.assertEquals( ok, true )
+
+	local ok, scheduleobj = c.cache_get(configdb, "mypool")
+	lu.assertEquals( ok, true )
+
+	local ok, localdb0 = c.cache_init("local", reactorobj, scheduleobj, "sharedata2")
+	lu.assertEquals( ok, true )
+
+	do_test(localdb0)
+end
+
+
 function TestCache:test_local_withreactor()
-
 	local ok, localdb0 = c.cache_init("local", reactorobj, "sharedata2")
 	lu.assertEquals( ok, true )
 
 	do_test(localdb0)
-
 end
 
 -- local cache 
@@ -86,6 +105,7 @@ function TestCache:test_local_withooutreactor()
 
 	do_test(localdb0)
 end
+
 
 lu.run()
 

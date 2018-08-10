@@ -27,26 +27,33 @@ function TestStorm:test_storm()
 	
 	local test_topic = 12345
 
-	c.storm_subscribe(clientobj1, test_topic)
-	c.storm_subscribe(clientobj2, test_topic)
+	local ok = c.storm_subscribe(clientobj1, test_topic)
+	lu.assertEquals( ok, true )
+
+	local ok = c.storm_subscribe(clientobj2, test_topic)
+	lu.assertEquals( ok, true )
 
 	c.usleep(200)
 
-	c.storm_publish(clientobj1, test_topic, "hello, storm")
+	local ok = c.storm_publish(clientobj1, test_topic, "hello, storm")
+	lu.assertEquals( ok, true )
 
 	c.usleep(200)
 
 	lu.assertEquals( 2, ctx.counter )
 
-	c.storm_publish(clientobj1, test_topic, "hello, storm")
+	local ok = c.storm_publish(clientobj1, test_topic, "hello, storm")
+	lu.assertEquals( ok, true )
 
 	c.usleep(200)
 
 	lu.assertEquals( 4, ctx.counter )
 
-	c.storm_unsubscribe(clientobj1, test_topic)
+	local ok = c.storm_unsubscribe(clientobj1, test_topic)
+	lu.assertEquals( ok, true )
 
-	c.storm_publish(clientobj1, test_topic, "hello, storm")
+	local ok = c.storm_publish(clientobj1, test_topic, "hello, storm")
+	lu.assertEquals( ok, true )
 
 	c.usleep(200)
 

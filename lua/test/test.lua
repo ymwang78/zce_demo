@@ -1,4 +1,5 @@
 ﻿local c = require "zce.core"
+local lu = require('luaunit')
 
 _M = {}
 
@@ -16,16 +17,30 @@ function _M.test_me()
 
 	local ok, tpool = c.new_threadpool(2)
 
+	local ok, configdb = c.cache_init("local", "config")
+	c.cache_set(configdb, 0, "mypool", tpool)
+
+	c.new_service("test_pgsql", "lua/test/test_pgsql.lua")
+
+	
+
+	-- c.new_service("websvr", "lua/test/test_websocket_server.lua")
+
+	-- c.new_service("test_cjson", "lua/test/test_cjson.lua", tpool)
+
+	-- c.new_service("test_protobuf", "lua/test/test_protobuf.lua")
+end
+
+function _M.debug()
+
+	c.new_service("test_cache", "lua/test/test_cache.lua")
+
 	c.new_service("test_rawsvr", "lua/test/test_rawsocket_server.lua")
 	
 	c.new_service("test_rawcli", "lua/test/test_rawsocket_client.lua")
 
-	c.new_service("test_pgsql", "lua/test/test_pgsql.lua")
-
 	c.new_service("test_storm", "lua/test/test_storm.lua", tpool)
-
-	c.new_service("test_cache", "lua/test/test_cache.lua")
-
+	
 	c.new_service("test_lpcsvr", "lua/test/test_rpc_server.lua")
 
 	c.new_service("test_lpccli", "lua/test/test_rpc_client.lua", tpool)
@@ -37,16 +52,6 @@ function _M.test_me()
 	c.new_service("test_httpsvr", "lua/test/test_http_server.lua")
 
     c.new_service("test_httpcli", "lua/test/test_http_client.lua")
-
-	-- c.new_service("websvr", "lua/test/test_websocket_server.lua")
-
-	-- c.new_service("test_cjson", "lua/test/test_cjson.lua", tpool)
-
-	-- c.new_service("test_protobuf", "lua/test/test_protobuf.lua")
-end
-
-function _M.debug()
-
 end
 
 return _M;
