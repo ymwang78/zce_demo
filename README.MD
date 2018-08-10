@@ -6,8 +6,11 @@ ZDLUA 示例和测试工程
 <h1> Windows </h1> 
 
 运行方法：
+
 1. 因为是DEBUG，需要VisualStudio 2017 debug运行时，最简单的办法直接安装Visual Studio 2017 Community版
+
 2. 双击执行start_server.bat 或者
+
    CD zdlua.exe所在目录，执行 zdlua.exe --console
 
 <h1> Centos7 x64 Linux  </h1>
@@ -15,7 +18,9 @@ ZDLUA 示例和测试工程
 1. Linux依赖库(Centos 7)：
 
     rpm -ivh https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm
+    
     yum install postgresql94-libs
+    
     yum install boost
     
 2. 程序 Linux 下载:
@@ -25,10 +30,15 @@ ZDLUA 示例和测试工程
 3. 运行
 
     wget http://dist.zhidu.biz/vxserver/c7testing/zdlua.2.7.xxxxxxxxxxxxxx.bin
+    
     chmod +x *.bin
+    
     ./zdlua.2.7.xxxxxxxxxxxxxx.bin
+    
     cd /opt/zdlua
+    
     mv zdlua.xml.tpl zdua.xml
+    
     ./zdlua --console  (运行在控制台) 或者 /etc/init.d/zdlua restart (以damon服务跑，会多一个监视进程)
 
 
