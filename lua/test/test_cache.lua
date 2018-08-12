@@ -44,7 +44,7 @@ function do_test(localdb0)
 	lu.assertEquals( t, testval_table )
 
 	-- c.log(1, "\t", "wait 6 sec to make key expire")
-	c.usleep(6000)
+	c.usleep(10000)
 	-- c.log(1, "\t", "wait end")
 
 	local ok, s, b, i, d, t = c.cache_get(localdb0, "test:v0")

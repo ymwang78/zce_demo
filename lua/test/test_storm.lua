@@ -5,7 +5,7 @@ TestStorm = {}
 
 local ok, serveobj = c.storm_serve(1000, "0.0.0.0", 3500) --reactorobj, 
 lu.assertEquals( ok, true )
-
+c.usleep(200)
 
 local function on_storm_data(oid, topic, from, data, ctx)
 	c.log(1, "\t", oid, topic, from, data, ctx)
@@ -59,6 +59,9 @@ function TestStorm:test_storm()
 
 	lu.assertEquals( 5, ctx.counter )
 
+	c.storm_close(clientobj1)
+	c.storm_close(clientobj2)
+	c.storm_close(serveobj)
 end
 
 lu.run()

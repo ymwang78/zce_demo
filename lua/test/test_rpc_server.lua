@@ -19,7 +19,7 @@ local lu = require('luaunit')
 
 TestLpcSvr = {}
 
-local ok = c.rpc_serve("rpc", "0.0.0.0", 1218, "say_")
+local ok, rpcserv = c.rpc_serve("rpc", "0.0.0.0", 1218, "say_")
 lu.assertEquals( ok, true )
 
 local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
@@ -72,3 +72,11 @@ end
 -- coroutine.resume(co)
 
 lu.run()
+
+c.usleep(500000)
+
+local ok = c.rpc_close(rpcid)
+lu.assertEquals( ok, true )
+
+local ok = c.rpc_close(rpcserv)
+lu.assertEquals( ok, true )

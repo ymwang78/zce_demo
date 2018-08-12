@@ -3,8 +3,8 @@ local lu = require('luaunit')
 
 TestTimer = {}
 
-local ok, reatorobj = c.reactor_start()
-lu.assertEquals( ok, true )
+-- local ok, reatorobj = c.reactor_start()
+-- lu.assertEquals( ok, true )
 
 function timer_print(timerobj, now, tick, ctx)
 	ctx.counter = ctx.counter + 1
@@ -20,7 +20,7 @@ function TestTimer:test_timer()
 
 	c.usleep(5 * 1000 + 100)
 	
-	lu.assertEquals( 10, ctx.counter )
+	lu.assertEquals( ctx.counter, 10 )
 
 	local ok = c.timer_stop(timerid)
 	lu.assertEquals( ok, true )

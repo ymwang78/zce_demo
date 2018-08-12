@@ -40,6 +40,7 @@ function on_rawsock_client(con, event, data)
 
     elseif event == "DISC" then
 		con.globstat.close_count = con.globstat.close_count + 1
+		c.tcp_close(con)
     end
     return true
 end
@@ -87,7 +88,7 @@ end
 
 
 function on_rawudp_client(con, event, data)
-    -- c.log(1, "\t", con.peerip, con.peerport, con.fd, event, data, call_count)
+    c.log(1, "\t", con.peerip, con.peerport, con.fd, event, data, call_count)
 
     if event == "READ" then
 		con.connstat.recv_bytes = con.connstat.recv_bytes + string.len(data)
@@ -103,19 +104,23 @@ function on_rawudp_client(con, event, data)
 end
 
 function TestRawSocket:test_udp()
-	for i = 1, 10 do
-		local ok2, con = c.udp_listen("raw", "0.0.0.0", 0, on_rawudp_client)
-		con.peerip = "127.0.0.1"
-		con.peerport = 1215
+	for i = 1, 1 do
+		local con = {}
 		constatus = { recvcall_count = 0, recv_bytes = 0}
 		con.connstat = constatus
-		local ok = c.udp_send(con, "hello,world", 4, 9)
+
+		local ok2, retcon = c.udp_listen("raw", "0.0.0.0", 0, on_rawudp_client, con)
+		retcon.peerip = "127.0.0.1"
+		retcon.peerport = 1215
+
+		local ok = c.udp_send(retcon, "hello,world", 4, 9)
 		c.usleep(1 * 1000)
 		lu.assertEquals(ok, true)
 		lu.assertEquals( constatus.recv_bytes, 5 * 20 )
+		--c.usleep(5 * 1000)
+		c.udp_close(retcon)
 	end
 end
-
 
 lu.run()
 

@@ -1,4 +1,5 @@
 local c = require "zce.core"
+local lu = require('luaunit')
 
 function on_http_event(con, event, data)
     if event == "CONN" then
@@ -10,5 +11,10 @@ function on_http_event(con, event, data)
     end
 end
 
-local ok2 = c.tcp_listen("http", "0.0.0.0", 8080, on_http_event)
+local ok, listenobj = c.tcp_listen("http", "0.0.0.0", 8080, on_http_event)
+lu.assertEquals(ok, true)
 
+c.usleep(5000)
+
+local ok = c.tcp_close(listenobj)
+lu.assertEquals(ok, true)

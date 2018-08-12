@@ -1,4 +1,5 @@
 local c = require "zce.core"
+local lu = require('luaunit')
 
 local ok, reactorobj = c.reactor_start()
 
@@ -13,7 +14,8 @@ function on_rawsock_tcpecho(con, event, data)
     end
 end
 
-local ok1 = c.tcp_listen(reactorobj, "raw", "0.0.0.0", 1215, on_rawsock_tcpecho)
+local ok1, obj1 = c.tcp_listen(reactorobj, "raw", "0.0.0.0", 1215, on_rawsock_tcpecho)
+lu.assertEquals(ok, true)
 
 function on_rawsock_udp(con, event, data)
     -- print(con.peerip, con.peerport, con.fd, event, data, connection_count)
@@ -26,6 +28,9 @@ function on_rawsock_udp(con, event, data)
 
 end
 
-local ok2 = c.udp_listen(reactorobj, "raw", "0.0.0.0", 1215, on_rawsock_udp)
+local ok2, obj2 = c.udp_listen(reactorobj, "raw", "0.0.0.0", 1215, on_rawsock_udp)
 
+c.usleep(10000)
 
+c.tcp_close(obj1)
+c.udp_close(obj2)

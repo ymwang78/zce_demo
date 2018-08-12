@@ -72,5 +72,12 @@ function TestRpc:test_call_cascade()
 	lu.assertEquals( ok, true )
 end
 
-
 lu.run()
+
+c.usleep(100000)
+
+local ok = c.rpc_close(lpcid)
+lu.assertEquals( ok, true )
+
+local ok = c.rpc_close(rpcid)
+lu.assertEquals( ok, true )
