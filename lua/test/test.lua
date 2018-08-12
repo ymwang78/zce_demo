@@ -20,6 +20,12 @@ function _M.test_me()
 	local ok, configdb = c.cache_init("local", "config")
 	c.cache_set(configdb, 0, "mypool", tpool)
 	
+	c.new_service("test_pgsql", "lua/test/test_pgsql.lua")
+
+end
+
+function _M.debug()
+
 
 	c.new_service("test_vmerr", "lua/test/test_vmerr.lua", tpool)
 
@@ -30,7 +36,6 @@ function _M.test_me()
 	c.new_service("", "lua/test/test_timer.lua", tpool)
 
 	c.new_service("test_pgsql", "lua/test/test_pgsql.lua")
-
 	
 	c.new_service("", "lua/test/test_pgsql.lua")
 
@@ -73,11 +78,6 @@ function _M.test_me()
 	-- c.new_service("test_cjson", "lua/test/test_cjson.lua", tpool)
 
 	-- c.new_service("test_protobuf", "lua/test/test_protobuf.lua")
-end
-
-function _M.debug()
-
-
 		
 end
 

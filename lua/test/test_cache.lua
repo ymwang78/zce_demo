@@ -83,7 +83,7 @@ function TestCache:test_local_withreactorandschedule()
 	local ok, scheduleobj = c.cache_get(configdb, "mypool")
 	lu.assertEquals( ok, true )
 
-	local ok, localdb0 = c.cache_init("local", reactorobj, scheduleobj, "sharedata2")
+	local ok, localdb0 = c.cache_init("local", reactorobj, scheduleobj, "sharedata1")
 	lu.assertEquals( ok, true )
 
 	do_test(localdb0)
@@ -100,7 +100,7 @@ end
 -- local cache 
 function TestCache:test_local_withooutreactor()
 
-	local ok, localdb0 = c.cache_init("local", "sharedata2")
+	local ok, localdb0 = c.cache_init("local", "sharedata3")
 	lu.assertEquals( ok, true )
 
 	do_test(localdb0)
