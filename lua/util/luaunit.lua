@@ -1258,6 +1258,17 @@ end
 ------------------------------------------------------------------
 --                  Equality assertions
 ------------------------------------------------------------------
+function M.ensureEquals(actual, expected, extra_msg_or_nil, doDeepAnalysis)
+    if type(actual) == 'table' and type(expected) == 'table' then
+        if not _is_table_equals(actual, expected) then
+            c.log(2, "\n", errorMsgEquality(actual, expected, doDeepAnalysis), extra_msg_or_nil)
+        end
+    elseif type(actual) ~= type(expected) then
+        c.log(2, errorMsgEquality(actual, expected), extra_msg_or_nil)
+    elseif actual ~= expected then
+        c.log(2, errorMsgEquality(actual, expected), extra_msg_or_nil)
+    end
+end
 
 function M.assertEquals(actual, expected, extra_msg_or_nil, doDeepAnalysis)
     if type(actual) == 'table' and type(expected) == 'table' then
