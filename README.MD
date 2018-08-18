@@ -1,7 +1,7 @@
-ZDLUA 示例和测试工程
+ZUA 示例和测试工程
 本EXE在WIN10上X64 Debug编译，由于是面向开发者，暂未提供Windows Release版本。
 
-详情参见  <a href="https://github.com/ymwang78/zdlua/wiki"> Wiki </a>。
+详情参见  <a href="https://github.com/ymwang78/zua/wiki"> Wiki </a>。
 
 <h1> Windows </h1> 
 
@@ -11,7 +11,7 @@ ZDLUA 示例和测试工程
 
 2. 双击执行start_server.bat 或者
 
-   CD zdlua.exe所在目录，执行 zdlua.exe --console
+   CD zua.exe所在目录，执行 zua.exe --console
 
 <h1> Centos7 x64 Linux  </h1>
 
@@ -29,16 +29,16 @@ ZDLUA 示例和测试工程
 
 3. 运行
 
-    wget http://dist.zhidu.biz/vxserver/c7testing/zdlua.2.7.xxxxxxxxxxxxxx.bin
+    wget http://dist.zhidu.biz/vxserver/c7testing/zua.2.7.xxxxxxxxxxxxxx.bin
     
     chmod +x *.bin
     
-    ./zdlua.2.7.xxxxxxxxxxxxxx.bin
+    ./zua.2.7.xxxxxxxxxxxxxx.bin
     
-    cd /opt/zdlua
+    cd /opt/zua
     
-    mv zdlua.xml.tpl zdua.xml
+    mv zua.xml.tpl zua.xml
     
-    ./zdlua --console  (运行在控制台) 或者 /etc/init.d/zdlua restart (以damon服务跑，会多一个监视进程)
+    ./zua --console  (运行在控制台) 或者 /etc/init.d/zua restart (以damon服务跑，会多一个监视进程)
 
 
