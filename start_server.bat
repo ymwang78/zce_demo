@@ -1,1 +1,1 @@
-zdlua.exe --console
+zua.exe --console
