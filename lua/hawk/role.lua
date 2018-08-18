@@ -7,16 +7,13 @@ local cjson = require "cjson"
 local lu = require('luaunit')
 local session = require("auth.session")
 
-local ok, config = c.cache_init("local", "config")
+local ok, hawkcacheobj = c.cache_init("local", "hawk.cache")
 lu.assertEquals(ok, true)
 
-local ok, hawkcacheobj = c.cache_init("local", "hawk")
+local ok, pgdb = c.cache_get(hawkcacheobj, "pgdb")
 lu.assertEquals(ok, true)
 
-local ok, pgdb = c.cache_get(config, "pgdb")
-lu.assertEquals(ok, true)
-
-local ok, redisobj = c.cache_get(config, "redis")
+local ok, redisobj = c.cache_get(hawkcacheobj, "redis")
 lu.assertEquals(ok, true)
 
 --[[

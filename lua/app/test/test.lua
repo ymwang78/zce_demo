@@ -22,7 +22,6 @@ function _M.test_me()
 	
 	c.new_service("test_sqlite", "lua/app/test/test_sqlite.lua")
 
-	
 	c.new_service("test_vmerr", "lua/app/test/test_vmerr.lua", tpool)
 
 	c.new_service("", "lua/app/test/test_vmerr.lua", tpool)

@@ -68,6 +68,9 @@ function TestSqlite:test_sqlite_mem()
 	lu.assertEquals( res[2].tstz, "2018-01-01 12:23:12" )
 	lu.assertEquals( #res, 100 )
 
+	local ok, res = c.rdb_execute(sqlite, "select * from tbtest limit 1; select * from tbtest limit 100;");
+	lu.assertEquals( ok, true )
+
 	c.rdb_close(sqlite);
 end
 
