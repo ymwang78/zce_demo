@@ -13,21 +13,24 @@ rpc_suspend 为了防止RPC调用忘记调用rpc_response，导致rpc_call无限
 参数第一个为sid, 第二个是超时时间，如果过了超时时间，RPC调用者会收到一个空的结果，后续再调用rpc_response将被丢弃
 
 --]]
+local rpcport = ...
 
 local c = require "zce.core"
 local lu = require('luaunit')
 
 TestLpcSvr = {}
 
-local ok, rpcserv = c.rpc_serve("rpc", "0.0.0.0", 1218, "say_")
-lu.assertEquals( ok, true )
+if rpcport == nil then
+    -- rpcport = 1218
+end
 
-local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
-lu.assertEquals( ok, true )
+-- local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
+-- lu.assertEquals( ok, true )
 
 function say_hello(sid, from, v0, v1)
-	c.log(1, " ", "request(say_hello):" , sid, from, v0, v1)
-    c.rpc_response(sid, "hi", "response", 56789)
+	--c.log(1, " ", "request(say_hello):" , sid, from, v0, v1)
+    c.rpc_response(sid, "hi", "response", rpcport)
+
 end
 
 function say_hello_timeout(sid, from, v0, v1)
@@ -57,7 +60,7 @@ function norpc_say_hello(sid, from, v0, v1)
     c.rpc_response(sid,  v0, v1, v2) 
 end
 
-function TestLpcSvr:test_call_self()
+function TestLpcSvr:_call_self()
     local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", 2000, "abcd")
 	c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
 	lu.assertEquals( ok, true )
@@ -75,8 +78,8 @@ lu.run()
 
 c.usleep(500000)
 
-local ok = c.rpc_close(rpcid)
-lu.assertEquals( ok, true )
+-- local ok = c.rpc_close(rpcid)
+-- lu.assertEquals( ok, true )
 
 local ok = c.rpc_close(rpcserv)
 lu.assertEquals( ok, true )

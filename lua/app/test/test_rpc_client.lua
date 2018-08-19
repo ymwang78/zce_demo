@@ -1,3 +1,4 @@
+local lpcsvrname, rpcport = ...
 local c = require "zce.core"
 local lu = require('luaunit')
 
@@ -5,10 +6,10 @@ TestRpc = {}
 
 -- make sure there is a service with name "test_lpcsvr"
 
-local ok, lpcid = c.rpc_ident("lpc", "test_lpcsvr")
+local ok, lpcid = c.rpc_ident("lpc", lpcsvrname)
 lu.assertEquals( ok, true )
 
-local ok, rpcid = c.rpc_ident("rpc", "127.0.0.1", 1218)
+local ok, rpcid = c.rpc_ident("rpc", "127.0.0.1", rpcport, lpcsvrname)
 lu.assertEquals( ok, true )
 
 function TestRpc:test_call()
@@ -72,9 +73,24 @@ function TestRpc:test_call_cascade()
 	lu.assertEquals( ok, true )
 end
 
-lu.run()
+-- lu.run()
+local stop =false
+local count = 0
+c.timer_start(5000, false, function (timerobj, now, tick, ctx) 
+	stop = true
+end)
 
-c.usleep(100000)
+repeat 
+	local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", "abcd", 12345)
+    -- c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
+	-- lu.assertEquals( ok, true )
+	count = count + 1
+	-- break
+until (stop)
+
+c.usleep(10000)
+
+print (count)
 
 local ok = c.rpc_close(lpcid)
 lu.assertEquals( ok, true )

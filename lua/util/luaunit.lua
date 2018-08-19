@@ -2214,10 +2214,9 @@ TextOutput.__class__ = 'TextOutput'
     end
 
     function TextOutput:displayOneFailedTest( index, fail )
-        print(index..") "..fail.testName )
-        print( fail.msg )
-        print( fail.stackTrace )
-        print()
+        c.log(1, "\n", index..") "..fail.testName,
+			fail.msg,
+			fail.stackTrace)
     end
 
     function TextOutput:displayFailedTests()

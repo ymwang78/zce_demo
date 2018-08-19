@@ -1,11 +1,13 @@
 ﻿local c = require "zce.core"
 local lu = require('luaunit')
 
+print(s)
+
 _M = {}
 
 function _M.test_me()
 
-	c.log(1, "\t", "...........start...........")
+	c.log(1, "\t", "...........start...........", s)
 
 	-- mempool 设置内置内存池，调节APP性能
 	-- 特别是sharedata 存放的数据将从mempool取
@@ -15,11 +17,23 @@ function _M.test_me()
 	local ok = c.new_mempool(512, 10240)
 	local ok = c.new_mempool(1024, 10240)
 
-	local ok, tpool = c.new_threadpool(2)
+	local ok, tpool = c.new_threadpool(4)
 
 	local ok, configdb = c.cache_init("local", "config")
 	c.cache_set(configdb, 0, "mypool", tpool)
 	
+	local ok, rpcserv = c.rpc_serve("rpc", "0.0.0.0", 1217, "say_")
+	lu.assertEquals( ok, true )
+
+	c.new_service("test_lpcsvr1", "lua/app/test/test_rpc_server.lua", tpool)
+	c.new_service("test_lpcsvr2", "lua/app/test/test_rpc_server.lua")
+
+	c.new_service("test_lpccli1", "lua/app/test/test_rpc_client.lua", tpool, "test_lpcsvr1", 1217)
+	c.new_service("test_lpccli2", "lua/app/test/test_rpc_client.lua", "test_lpcsvr2", 1217)
+end
+
+function _M.debug()
+
 	c.new_service("test_sqlite", "lua/app/test/test_sqlite.lua")
 
 	c.new_service("test_vmerr", "lua/app/test/test_vmerr.lua", tpool)
@@ -74,12 +88,6 @@ function _M.test_me()
 
 	-- c.new_service("test_protobuf", "lua/app/test/test_protobuf.lua")
 		
-
-end
-
-function _M.debug()
-
-
 end
 
 return _M;
