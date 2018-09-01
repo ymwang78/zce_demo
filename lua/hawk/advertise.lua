@@ -17,7 +17,7 @@ lu.assertEquals(ok, true)
 
 local _AD_CACHE = {}
 
-function _M:queryAd(parameters)
+function _M.queryAd(parameters)
 	if (_AD_CACHE[parameters.id] ~= nil) then
 		return _AD_CACHE[parameters.id]
 	end
@@ -36,7 +36,7 @@ function _M:queryAd(parameters)
 	return adobj
 end
 
-function _M:procHttpReq(data)
+function _M.procHttpReq(data)
 	local bodyobj = {}
 	if string.len(data.body) > 0 then
 		if ( data.header['Content-Type'] ~= nil and string.match(data.header['Content-Type'], "application/json") ) then
@@ -45,7 +45,7 @@ function _M:procHttpReq(data)
 	end
 
 	if (string.match(data.path, "/advertise/queryAd")) then
-		local adobj = _M:queryAd(data.parameters)
+		local adobj = _M.queryAd(data.parameters)
 		if (adobj == nil) then
 			return ""
 		else

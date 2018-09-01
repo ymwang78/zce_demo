@@ -39,14 +39,17 @@ c.cache_set(config, 0, "redis", redisobj)
 
 --[[
 c.vm_addpath('./lua/app/?.lua')
-local t = require("app.diandian.diandian")
+local t = require("app.diandian.main")
 t.start()
 --]]
 
---[[
--- c.vm_addpath('./lua/app/?.lua')
--- local t = require("app.battleoflove.server.service")
--- t.start()
+---[[
+c.vm_addpath('./lua/app/?.lua')
+c.vm_addpath('./lua/app/battleoflove/?.lua')
+local t = require("app.battleoflove.server.dbservice")
+t.start()
+local t = require("app.battleoflove.server.service")
+t.start()
 --]]
 
 --[[
@@ -54,7 +57,7 @@ local unitest = require("diandian.unittest")
 unitest.test_me()
 --]]
 
----[[
+--[[
 local unitest = require("test.test")
 unitest.test_me()
 --]]

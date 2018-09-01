@@ -9,6 +9,7 @@ function on_rawsock_tcpecho(con, event, data)
     elseif event == "READ" then
 		con.call_count = con.call_count + 1
         c.tcp_send(con, data);
+		c.tcp_close(con)
     elseif event == "DISC" then
 		c.tcp_close(con)
     end
@@ -32,5 +33,5 @@ local ok2, obj2 = c.udp_listen(reactorobj, "raw", "0.0.0.0", 1215, on_rawsock_ud
 
 c.usleep(10000)
 
-c.tcp_close(obj1)
-c.udp_close(obj2)
+-- c.tcp_close(obj1)
+-- c.udp_close(obj2)

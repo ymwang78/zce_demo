@@ -25,11 +25,10 @@ function _M.test_me()
 	local ok, rpcserv = c.rpc_serve("rpc", "0.0.0.0", 1217, "say_")
 	lu.assertEquals( ok, true )
 
-	c.new_service("test_lpcsvr1", "lua/app/test/test_rpc_server.lua", tpool)
-	c.new_service("test_lpcsvr2", "lua/app/test/test_rpc_server.lua")
+	
+	c.new_service("", "lua/app/test/test_rawsocket_server.lua")
 
-	c.new_service("test_lpccli1", "lua/app/test/test_rpc_client.lua", tpool, "test_lpcsvr1", 1217)
-	c.new_service("test_lpccli2", "lua/app/test/test_rpc_client.lua", "test_lpcsvr2", 1217)
+	-- c.new_service("", "lua/app/test/test_rawsocket_client.lua")
 end
 
 function _M.debug()

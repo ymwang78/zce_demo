@@ -35,7 +35,7 @@ function on_rawsock_client(con, event, data)
 		do_stat_send(con, ok, bytes)
 
 		if con.connstat.recvcall_count >= 20 then
-			c.tcp_close(con)
+			--c.tcp_close(con)
 		end
 
     elseif event == "DISC" then
@@ -103,7 +103,7 @@ function on_rawudp_client(con, event, data)
 
 end
 
-function TestRawSocket:test_udp()
+function TestRawSocket:__test_udp()
 	for i = 1, 1 do
 		local con = {}
 		constatus = { recvcall_count = 0, recv_bytes = 0}
