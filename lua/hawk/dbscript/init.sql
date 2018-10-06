@@ -22,7 +22,17 @@ CREATE TABLE public.users
     nick character varying(64) COLLATE pg_catalog."default",
     avatar character varying(256) COLLATE pg_catalog."default",
     passwd character varying(64) COLLATE pg_catalog."default",
-    CONSTRAINT users_pkey PRIMARY KEY (iid)
+    issuperadmin boolean,
+    idname character varying(64) COLLATE pg_catalog."default",
+    idcard character varying(64) COLLATE pg_catalog."default",
+    idcardtype character varying(64) COLLATE pg_catalog."default",
+    cellidverified boolean,
+    emailidverified boolean,
+    idcardverified boolean,
+    CONSTRAINT users_pkey PRIMARY KEY (iid),
+    CONSTRAINT users_unique_cellid UNIQUE (cellid),
+    CONSTRAINT users_unique_emailid UNIQUE (emailid),
+    CONSTRAINT users_unique_idcard UNIQUE (idcard)
 )
 WITH (
     OIDS = FALSE
@@ -61,7 +71,7 @@ WITH (
     OIDS = FALSE
 );
 ALTER TABLE public.roles_orgs
-    ADD CONSTRAINT roles_orgs_unique_orgname UNIQUE ;
+    ADD CONSTRAINT roles_orgs_unique_orgname UNIQUE (orgname);
 
 
 CREATE TABLE public.roles_users
