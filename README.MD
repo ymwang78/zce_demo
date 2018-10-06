@@ -17,11 +17,11 @@ ZUA 示例和测试工程
 
 1. Linux依赖库(Centos 7)：
 
+    rpm -ivh  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+
     rpm -ivh https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm
     
-    yum install postgresql94-libs
-    
-    yum install boost
+    yum install postgresql94-libs boost hiredis gperftools-libs
     
 2. 程序 Linux 下载:
 
