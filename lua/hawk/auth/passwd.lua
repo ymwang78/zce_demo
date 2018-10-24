@@ -18,7 +18,7 @@ local function _get_appsecret(appid)
         return _APP_SESCRET[appid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from config_oauth2 where appid = ?", appid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from config_oauth2 where appid = ?", appid)
     lu.ensureEquals(ok, true, res)
     lu.assertEquals(#res, 1) -- 如果这里错误，需要到config_oauth2表里去添加appid, appsecret
     if not ok or #res < 1 then
@@ -82,7 +82,11 @@ end
 function _M.sessionKeyLogin(parameters)
     c.log(1, "\t", "sessionKeyLogin:", c.tojson(parameters, true))
 
-    return session.getSession(parameters.session_key)
+    local login_session = session.getSession(parameters.session_key)
+    if login_session ~= nil then
+        c.log(1, "\t", "sessionKeyLogin:", c.tojson(login_session, true))
+    end
+    return login_session
 end
 
 function _M.updateUserInfo(parameters)
@@ -93,8 +97,12 @@ function _M.updateUserInfo(parameters)
         c.log(1, "\t", "updateUserInfo not found:", parameters.session_key)
         return nil
     end
+    
+    if login_session.idcard ~= nil then
+        login_session.idcard = tostring(login_session.idcard)
+    end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "update users set nick=?, avatar=? where iid=?", 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update users set nick=?, avatar=? where iid=?", 
         parameters.nickname, parameters.avatarUrl, login_session.iid)
     lu.assertEquals(ok, true)
     lu.assertEquals(#res, 1)

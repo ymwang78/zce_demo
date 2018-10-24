@@ -18,25 +18,30 @@ function _M.setCache(orguser)
     _ORG_USER[orguser.orgid][orguser.iid] = orguser
 end
 
-function _M.upsertOrgUser(orgid, iid, name, cell, memo)
-    local ok, res = zce.rdb_query(cfg.pgsqldb,
-        "select count(*) as num from users_orgs where orgid=? and iid=?",
+function _M.upsertOrgUser(orgid, iid, name, cell, memo, opencard)
+    local old_orguser = nil
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
+        "select * from users_orgs where orgid=? and iid=?",
         orgid, iid)
     lut.ensureEquals(ok, true, res)
     if not ok then
-        return ok
+        return ok, old_orguser
     end
-    zce.log(1, "|",ok, res[1]["num"], orgid, iid, name, cell, memo)
-    if res[1]["num"] == 0 then
-        ok, res = zce.rdb_query(cfg.pgsqldb,
-            "insert into users_orgs(orgid, iid, name, cell, memo, regtime) values(?,?,?,?,?,now())",
-            orgid, iid, name, cell, memo)
+    if #res >= 1 then
+        old_orguser = res[1]
+    end
+    zce.log(1, "|",ok, #res, orgid, iid, name, cell, memo)
+    if old_orguser == nil then
+        ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
+            "insert into users_orgs(orgid, iid, name, cell, memo, opencard, regtime) values(?,?,?,?,?,?,now())",
+            orgid, iid, name, cell, memo, opencard)
         lut.ensureEquals(ok, true, res)
     else
-        ok, res = zce.rdb_query(cfg.pgsqldb,
-            "update users_orgs set name=?,cell=?,memo=?,regtime=now() where orgid=? and iid=?",
-            name, cell, memo, orgid, iid)
+        ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
+            "update users_orgs set name=?,cell=?,memo=?,opencard=?,regtime=now() where orgid=? and iid=?",
+            name, cell, memo, opencard, orgid, iid)
         lut.ensureEquals(ok, true, res)
+        
     end
 
     _M.setCache({
@@ -44,10 +49,11 @@ function _M.upsertOrgUser(orgid, iid, name, cell, memo)
         iid = iid,
         name = name,
         cell = cell,
-        memo = memo
+        memo = memo,
+        opencard = opencard,
     })
 
-    return ok
+    return ok, old_orguser
 end
 
 function _M.getOrgUser2(orgid, iid)
@@ -55,7 +61,7 @@ function _M.getOrgUser2(orgid, iid)
         return true, _ORG_USER[orgid][iid]
     end
 
-    local ok, res = zce.rdb_query(cfg.pgsqldb,
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
         "select * from users_orgs where orgid=? and iid=?",
         orgid, iid)
     lut.ensureEquals(ok, true, res)

@@ -24,35 +24,37 @@ if rpcport == nil then
     -- rpcport = 1218
 end
 
+local ok, rpcserv = c.rpc_serve("rpc", "0.0.0.0", 1217, "say_")
+lu.assertEquals( ok, true )
 -- local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
 -- lu.assertEquals( ok, true )
 
 function say_hello(sid, from, v0, v1)
-	--c.log(1, " ", "request(say_hello):" , sid, from, v0, v1)
+    --c.log(1, " ", "request(say_hello):" , sid, from, v0, v1)
     c.rpc_response(sid, "hi", "response", rpcport)
 
 end
 
 function say_hello_timeout(sid, from, v0, v1)
-	c.log(1, " ", "request(say_hello_timeout):" , sid, from, v0, v1)
-	c.usleep(6 * 1000)
+    c.log(1, " ", "request(say_hello_timeout):" , sid, from, v0, v1)
+    c.usleep(6 * 1000)
     c.rpc_response(sid, "hi", "response", 56789)
 end
 
 function say_hello_noresponse(sid, from, v0, v1)
-	c.log(1, " ", "request(say_hello_noresponse):" , sid, from, v0, v1)
+    c.log(1, " ", "request(say_hello_noresponse):" , sid, from, v0, v1)
 end
 
 function say_hello_delay(sid, from, v0, v1)
-	c.rpc_suspend(sid, 10000) -- 默认超时5秒，告诉系统最多要10秒，但是对RPC无效
-	c.log(1, " ", "request(say_hello_delay):" , sid, from, v0, v1)
-	c.usleep(6 * 1000)
+    c.rpc_suspend(sid, 10000) -- 默认超时5秒，告诉系统最多要10秒，但是对RPC无效
+    c.log(1, " ", "request(say_hello_delay):" , sid, from, v0, v1)
+    c.usleep(6 * 1000)
     c.rpc_response(sid, "hi", "response", 56789)
 end
 
 function say_hello_cascade(sid, from, v0, v1)
-	c.log(1, " ", "request(say_hello_cascade):" , sid, from, v0, v1)
-	local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", v0, v1) -- 可以再次向自己发起一个RPC调用
+    c.log(1, " ", "request(say_hello_cascade):" , sid, from, v0, v1)
+    local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", v0, v1) -- 可以再次向自己发起一个RPC调用
     c.rpc_response(sid,  v0, v1, v2) 
 end
 
@@ -62,13 +64,13 @@ end
 
 function TestLpcSvr:_call_self()
     local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", 2000, "abcd")
-	c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
-	lu.assertEquals( ok, true )
+    c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
+    lu.assertEquals( ok, true )
 
-	-- allow lpc call any method 
-	local ok, v0, v1, v2 = c.rpc_call(rpcid, "norpc_say_hello", 2000, "abcd")
-	c.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
-	lu.assertEquals( ok, true )
+    -- allow lpc call any method 
+    local ok, v0, v1, v2 = c.rpc_call(rpcid, "norpc_say_hello", 2000, "abcd")
+    c.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
+    lu.assertEquals( ok, true )
 end
 
 -- co = coroutine.create(test_locallpc)

@@ -18,7 +18,7 @@ local function _get_appsecret(appid)
         return _APP_SESCRET[appid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from config_oauth2 where appid = ?", appid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from config_oauth2 where appid = ?", appid)
     lu.ensureEquals(ok, true, res)
     lu.assertEquals(#res, 1) -- 如果这里错误，需要到config_oauth2表里去添加appid, appsecret
     if not ok or #res < 1 then
@@ -32,7 +32,7 @@ end
 
 -- 从OPENID查找IID，如果没有，创建一个
 function _M.getIidFromOpenID(openid)
-    local ok, resiid = c.rdb_query(cfg.pgsqldb, "select * from users_oauth2 where openid = ?", openid)
+    local ok, resiid = c.rdb_query(cfg.pgsqldb.dbobj, "select * from users_oauth2 where openid = ?", openid)
     if not ok then
         return ok, nil
     end
@@ -40,11 +40,11 @@ function _M.getIidFromOpenID(openid)
         return  ok, resiid[1].iid
     end
 
-    local ok, resiid = c.rdb_query(cfg.pgsqldb, "insert into users(passwd) values (?) returning iid", "")
+    local ok, resiid = c.rdb_query(cfg.pgsqldb.dbobj, "insert into users(passwd) values (?) returning iid", "")
     lu.ensureEquals(ok, true)
     c.log(1, "\t", "auth:", c.tojson(resiid[1], true))
     
-    local ok, res = c.rdb_query(cfg.pgsqldb, "insert into users_oauth2(openid, iid) values (?, ?)", openid, resiid[1].iid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "insert into users_oauth2(openid, iid) values (?, ?)", openid, resiid[1].iid)
     lu.assertEquals(ok, true)
 
     return  ok, resiid[1].iid
@@ -111,7 +111,7 @@ function _M.updateUserInfo(parameters)
         return nil
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "update users set nick=?, avatar=? where iid=?", 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update users set nick=?, avatar=? where iid=?", 
         parameters.nickname, parameters.avatarUrl, login_session.iid)
     lu.assertEquals(ok, true)
     lu.assertEquals(#res, 1)

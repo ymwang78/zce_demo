@@ -41,13 +41,13 @@ local cfg = require("hawk.config")
 ]]
 
 function _M.tradeCoin(serialid, tradeid, tradetype, tradename, memo, tradeoffers, coinlockid, critisteps, endlock, allowneg)
-    local rpcok, ok, res = c.rpc_call(cfg.coinrpc, "rpc_TradeCoin", serialid, tradeid, tradetype, tradename, memo, tradeoffers, coinlockid, critisteps, endlock, allowneg)
+    local rpcok, ok, res = c.rpc_call(cfg.coinrpc.coinrpcid, "rpc_TradeCoin", serialid, tradeid, tradetype, tradename, memo, tradeoffers, coinlockid, critisteps, endlock, allowneg)
     c.log(1, "\t", "tradeCoin:", rpcok, ok, res)
     return ok, res
 end
 
 function _M.queryCoin(serialid, queryoffers, coinlockid)
-    local rpcok, ok, res = c.rpc_call(cfg.coinrpc, "rpc_QueryCoin", serialid, queryoffers, coinlockid)
+    local rpcok, ok, res = c.rpc_call(cfg.coinrpc.coinrpcid, "rpc_QueryCoin", serialid, queryoffers, coinlockid)
     c.log(1, "\t", "queryCoin:", rpcok, ok, res)
     return ok, res
 end
@@ -62,7 +62,7 @@ function _M.queryCoinOne(coinname, useridx, coinlockid)
 end
 
 function _M.queryHistory(coinname, useridx, begint, endt, startidx, querynum)
-    local rpcok, ok, res = c.rpc_call(cfg.coinrpc, "rpc_QueryHistory", coinname, useridx, begint, endt, startidx, querynum)
+    local rpcok, ok, res = c.rpc_call(cfg.coinrpc.coinrpcid, "rpc_QueryHistory", coinname, useridx, begint, endt, startidx, querynum)
     c.log(1, "\t", "queryHistory:", rpcok, ok, res)
     return ok, res
 end

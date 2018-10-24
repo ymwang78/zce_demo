@@ -23,7 +23,7 @@ function _M.getUserFromIid(iid)
     if (_IID_USERS[iid] ~= nil) then
         return true, _IID_USERS[iid]
     end
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from users where iid = ?", iid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from users where iid = ?", iid)
     if not ok or #res == 0 then
         return false, nil
     end
@@ -38,10 +38,10 @@ function _M.getUserFromPid(pid)
     end
 
     local ok, res
-    if pid > 10000000000 then
-        ok, res = c.rdb_query(cfg.pgsqldb, "select * from users where cellid = ?", tostring(pid))
+    if tonumber(pid) > 10000000000 then
+        ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from users where cellid = ?", tostring(pid))
     else
-        ok, res = c.rdb_query(cfg.pgsqldb, "select * from users where pid = ?", pid)
+        ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from users where pid = ?", pid)
     end
     if not ok or #res == 0 then
         return false, nil
@@ -57,7 +57,7 @@ function _M.updateUserIdInfo(user, propertie, value)
         return false
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "update users set " .. propertie .. "=? where iid = ?", value, user.iid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update users set " .. propertie .. "=? where iid = ?", value, user.iid)
     if not ok or #res == 0 then
         return false
     end

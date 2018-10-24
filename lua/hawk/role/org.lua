@@ -20,7 +20,7 @@ local _ORG = {}
 
 --获取所有组织列表
 function _M.getAllOrgs()
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from roles_orgs where enabled = true")
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles_orgs where enabled = true")
     if (ok and #res > 0) then
         _ORG = {}
         for i = 1, #res do
@@ -36,7 +36,7 @@ function _M.getOrg(orgid)
     if (_ORG[orgid] ~= nil) then
         return _ORG[orgid]
     end
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from roles_orgs where orgid = ? and enabled = true", orgid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles_orgs where orgid = ? and enabled = true", orgid)
     if (ok and #res > 0) then
         _ORG[orgid] = res[1]
         return res[1]
@@ -46,13 +46,13 @@ end
 
 function _M.addOrg(orgname, iid, orgfullname)
     
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from roles_orgs where orgname = ?", orgname)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles_orgs where orgname = ?", orgname)
     if (ok and #res > 0) then
         local org = res[1]
         if (org.enabled) then
             return false, org
         else
-            local ok, upres = c.rdb_query(cfg.pgsqldb, "update roles_orgs set enabled = true, owneriid= ?, orgfullname= ? where orgid = ?", iid, orgfullname, org.orgid)
+            local ok, upres = c.rdb_query(cfg.pgsqldb.dbobj, "update roles_orgs set enabled = true, owneriid= ?, orgfullname= ? where orgid = ?", iid, orgfullname, org.orgid)
             org.enabled = true
             org.owneriid = iid
             org.orgfullname = orgfullname
@@ -64,7 +64,7 @@ function _M.addOrg(orgname, iid, orgfullname)
         end
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "insert into roles_orgs(orgname, owneriid, orgfullname, enabled) values(?, ?, ?, true) returning orgid", orgname, iid, orgfullname)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "insert into roles_orgs(orgname, owneriid, orgfullname, enabled) values(?, ?, ?, true) returning orgid", orgname, iid, orgfullname)
     if (ok and #res > 0) then
         local org = { ['orgid'] = res[1].orgid, ['orgname'] = orgname, ['owneriid'] = iid, orgfullname = orgfullname}
         _ORG[res[1].orgid] = org
@@ -87,7 +87,7 @@ function _M.editOrg(orgid, orgname, owneriid, orgfullname)
 
     hr.clearUserRoleCache(owneriid)
 
-    local ok, upres = c.rdb_query(cfg.pgsqldb, "update roles_orgs set enabled = true, orgname= ?, owneriid= ?, orgfullname= ? where orgid = ?",
+    local ok, upres = c.rdb_query(cfg.pgsqldb.dbobj, "update roles_orgs set enabled = true, orgname= ?, owneriid= ?, orgfullname= ? where orgid = ?",
         orgname, owneriid, orgfullname, orgid)
     org.enabled = true
     org.orgname = orgname
@@ -115,7 +115,7 @@ function _M.delOrg(orgid, iid)
 
     hr.clearUserRoleCache(iid)
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "update roles_orgs set enabled = false where orgid = ?", orgid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update roles_orgs set enabled = false where orgid = ?", orgid)
     if (ok and #res > 0) then
         c.log(1, " ", "delOrg:", orgid)
         _ORG[orgid] = nil

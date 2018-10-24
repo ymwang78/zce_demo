@@ -5,13 +5,13 @@ local ok, reactorobj = c.reactor_start()
 
 function on_rawsock_tcpecho(con, event, data)
     if event == "CONN" then
-		con.call_count = 1
+        con.call_count = 1
     elseif event == "READ" then
-		con.call_count = con.call_count + 1
+        con.call_count = con.call_count + 1
         c.tcp_send(con, data);
-		c.tcp_close(con)
+        c.tcp_close(con)
     elseif event == "DISC" then
-		c.tcp_close(con)
+        c.tcp_close(con)
     end
 end
 
@@ -24,7 +24,7 @@ function on_rawsock_udp(con, event, data)
     if event == "READ" then
         c.udp_send(con, data);
     elseif event == "DISC" then
-		c.tcp_close(con)
+        c.tcp_close(con)
     end
 
 end

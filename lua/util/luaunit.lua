@@ -2215,8 +2215,8 @@ TextOutput.__class__ = 'TextOutput'
 
     function TextOutput:displayOneFailedTest( index, fail )
         c.log(1, "\n", index..") "..fail.testName,
-			fail.msg,
-			fail.stackTrace)
+            fail.msg,
+            fail.stackTrace)
     end
 
     function TextOutput:displayFailedTests()
@@ -2236,7 +2236,7 @@ TextOutput.__class__ = 'TextOutput'
             print()
         end
         self:displayFailedTests()
-		print(M.LuaUnit.statusLine( self.result ))
+        print(M.LuaUnit.statusLine( self.result ))
         c.log(1, "\t", M.LuaUnit.statusLine( self.result ) )
         if self.result.notPassedCount == 0 then
             c.log(1, "\t", 'OK')

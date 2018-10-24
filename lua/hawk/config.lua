@@ -3,60 +3,75 @@ local _M = {}
 _G[modename] = _M
 package.loaded[modename] = _M
 
-local c = require("zce.core")
-local lu = require('luaunit')
-
-local _ITEMS = {
-    {"coinrpc", "hawk.coin.rpcid"},
-    {"pgsqldb", "hawk.db.pgsql"},
-    {"redisdb", "hawk.db.redis"},
-    {"vsmsurl", "hawk.vsms.url"},
-}
+local zce = require("zce.core")
+local util = require("util.util")
+local lu = require('util.luaunit')
 
 local function initConfig()
-    local ok, hk_cache = c.cache_init("local", "hawk.config")
+    local ok, hk_cache = zce.cache_init("local", "lib.hawk")
     lu.ensureEquals(ok, true)
-    for i, item in ipairs(_ITEMS) do
-        local ok, itemval = c.cache_get(hk_cache, item[2])
-        lu.ensureEquals(ok, true, itemval)
-        -- c.log(1, "|", item[1], item[2], ok)
-        _M[item[1]] = itemval
+    local ok, cfg = zce.cache_get(hk_cache, "config")
+    if not ok or cfg == nil then
+        return
     end
+    -- zce.log(1, "|", zce.tojson(cfg, true))
+    util.shallowMerge(_M, cfg)
 end
 
 function _M.setConfig(cfg)
-    local ok, hawkcfg = c.cache_init("local", "hawk.config")
+    local ok, hawkcfg = zce.cache_init("local", "lib.hawk")
     lu.ensureEquals(ok, true, hawkcfg)
 
-    local ok, tpool = c.new_threadpool(4)
-    lu.ensureEquals(ok, true)
-
-    for i, item in ipairs(cfg.mempool) do
-        local ok = c.new_mempool(item[1], item[2])
-        lu.ensureEquals(ok, true, item[1])
+    if cfg.threadpool ~= nil then
+        local ok, tpool = zce.new_threadpool(cfg.threadpool.num)
+        lu.ensureEquals(ok, true)
+        cfg.threadpool.tpoolobj = tpool
     end
 
-    if cfg.vsmsurl ~= nil then
-        c.cache_set(hawkcfg, 0, "hawk.vsms.url", cfg.vsmsurl)
+    if cfg.mempool ~= nil then
+        for i, item in ipairs(cfg.mempool) do
+            local ok = zce.new_mempool(item[1], item[2])
+            lu.ensureEquals(ok, true, item[1])
+        end
     end
 
-    local ok, coinrpcid = c.rpc_ident("rpc", cfg.coinrpc.host, cfg.coinrpc.port, cfg.coinrpc.svrname)
-    lu.ensureEquals(ok, true, coinrpcid)
-    c.cache_set(hawkcfg, 0, "hawk.coin.rpcid", coinrpcid)
+    if cfg.coinrpc ~= nil then
+        local ok, coinrpcid = zce.rpc_ident("rpc", cfg.coinrpc.host .. ":" .. cfg.coinrpc.port, cfg.coinrpc.svrn)
+        lu.ensureEquals(ok, true, coinrpcid)
+        cfg.coinrpc.coinrpcid = coinrpcid
+    end
 
-    local connstr = cfg.pgsqldb.username .. ":" .. cfg.pgsqldb.password .. 
-        "@" .. cfg.pgsqldb.host .. ":" .. cfg.pgsqldb.port .. "/" .. cfg.pgsqldb.database
-    local ok, pgdb = c.rdb_conn("pgsql", connstr, tpool)
-    lu.ensureEquals(ok, true)
-    c.cache_set(hawkcfg, 0, "hawk.db.pgsql", pgdb)
+    if cfg.pgsqldb ~= nil then
+        local connstr = cfg.pgsqldb.user .. ":" .. cfg.pgsqldb.pass .. 
+            "@" .. cfg.pgsqldb.host .. ":" .. cfg.pgsqldb.port .. "/" .. cfg.pgsqldb.name
+        local tpoolobj = nil
+        if cfg.pgsqldb.tpool then
+            tpoolobj = cfg.threadpool.tpoolobj
+        end
+        local ok, pgdb = zce.rdb_conn("pgsql", connstr, tpoolobj)
+        lu.ensureEquals(ok, true)
+        cfg.pgsqldb.dbobj = pgdb
+    end
 
-    local ok, redisip = c.dns_resolve(cfg.redisdb.host)
-    lu.ensureEquals(ok, true)
-    local ok, redisobj = c.cache_init("redis",  redisip, cfg.redisdb.port, cfg.redisdb.password)
-    lu.ensureEquals(ok, true)
-    c.cache_set(hawkcfg, 0, "hawk.db.redis", redisobj)
+    if cfg.redisdb ~= nil then
+        local ok, redisip = zce.dns_resolve(cfg.redisdb.host)
+        lu.ensureEquals(ok, true)
+        local ok, redisobj = zce.cache_init("redis",  redisip, cfg.redisdb.port, cfg.redisdb.pass)
+        lu.ensureEquals(ok, true)
+        cfg.redisdb.dbobj = redisobj
+    end
 
+    if cfg.package ~= nil then
+        if cfg.package.cache == "redis" then
+            cfg.package.cacheobj = cfg.redisdb.dbobj
+        elseif cfg.package.cache == "local" then
+            cfg.package.cacheobj = hawkcfg
+        else
+            cfg.package.cacheobj = nil
+        end
+    end
 
+    zce.cache_set(hawkcfg, 0, "config", cfg)
 
     initConfig()
 end

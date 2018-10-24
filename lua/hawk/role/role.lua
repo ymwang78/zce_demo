@@ -10,7 +10,7 @@ local cfg = require("hawk.config")
 local hr = require("hawk.role.role")
 local hro = require("hawk.role.org")
 local session = require("hawk.auth.session")
-local dd = require("diandian.diandevice")
+local dd = require("dian_device")
 
 --[[
 {
@@ -122,7 +122,7 @@ local function _getNextRoleId(orgid, father_roleid)
     local admin_roleid = father_roleid + (1 << (level * 8))
     local father_mask =0xffffffffffffffff - (0xffffffffffffffff << ((level+0)*8))
     local mask = 0xffffffffffffffff - (0xffffffffffffffff << ((level+1)*8))
-    local ok, res = c.rdb_query(cfg.pgsqldb, 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
         [[select * from (select (roleid & ?) as role_id, (roleid & ?) as father_roleid from roles where orgid = ?) as foo where foo.father_roleid = ? order by foo.role_id desc limit 1]],
         mask, father_mask, orgid, father_roleid)
     c.log(1, "|", "_getNextRoleId",
@@ -162,7 +162,7 @@ function _M._getRole2(orgid, roleid)
             return true, org_roles[roleid]
         end
 
-        local ok, res = c.rdb_query(cfg.pgsqldb, "select * from roles where orgid = ? and roleid = ? order by roleid", orgid, roleid)
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles where orgid = ? and roleid = ? order by roleid", orgid, roleid)
         if not ok or #res == 0 then
             return false, nil
         end
@@ -173,7 +173,7 @@ function _M._getRole2(orgid, roleid)
         return true, res[1]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "select * from roles where orgid = ? order by roleid", orgid)
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles where orgid = ? order by roleid", orgid)
     if not ok or #res == 0 then
         return false, nil
     end
@@ -199,16 +199,16 @@ function _M.checkRoleRoot(orgid, roleid, owneriid)
     local public_roleid = roleid
     local admin_roleid = roleid + (1 << (level * 8))
 
-    local ok, res =  c.rdb_query(cfg.pgsqldb, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, public_roleid)
+    local ok, res =  c.rdb_query(cfg.pgsqldb.dbobj, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, public_roleid)
     if (ok and res[1].rownum < 1) then
-        local ok, res = c.rdb_query(cfg.pgsqldb,
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj,
             "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
             orgid, public_roleid, owneriid, "全体成员", "普通成员")
     end    
 
-    local ok, res =  c.rdb_query(cfg.pgsqldb, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, admin_roleid)
+    local ok, res =  c.rdb_query(cfg.pgsqldb.dbobj, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, admin_roleid)
     if (ok and res[1].rownum < 1) then
-        local ok, res = c.rdb_query(cfg.pgsqldb, 
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
             "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
             orgid, admin_roleid, owneriid, "管理员", "管理成员")
     end
@@ -239,7 +239,7 @@ function _M.addRole(orgid, father_roleid, owneriid, name, desc)
     local next_roleid = _getNextRoleId(orgid, father_roleid)
     c.log(1, "\t", "addRole:", string.format("%x", father_roleid), string.format("%x", next_roleid))
     
-    local ok, res = c.rdb_query(cfg.pgsqldb, "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
         orgid, next_roleid, owneriid, name, desc)
     if not ok or #res < 1 then
         return nil
@@ -265,7 +265,7 @@ function _M.updateRole2(orgid, roleid, owneriid, rolename, roledesc)
         return false, nil
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "update roles set owneriid=?, rolename=?, roledesc=? where orgid=? and roleid=?",
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update roles set owneriid=?, rolename=?, roledesc=? where orgid=? and roleid=?",
         owneriid, rolename, roledesc, orgid, roleid)
 
     if not ok then
@@ -286,7 +286,7 @@ function _M.deleteRole(orgid, roleid)
         return false
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, "delete from roles where orgid=? and roleid=?",
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "delete from roles where orgid=? and roleid=?",
         orgid, roleid)
 
     if not ok then
@@ -320,7 +320,7 @@ local function _getUserOrgs(objtable, iid)
 
     local orgs = {}
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
         "select DISTINCT orgid from roles_users where iid = ? and orgid in (select DISTINCT orgid from " .. objtable .. ")", iid)
     if not ok then
         return false, "dbquery failed"
@@ -332,7 +332,7 @@ local function _getUserOrgs(objtable, iid)
     end
 
     -- and orgid in (select DISTINCT orgid from " .. objtable .. ")
-    local ok, res = c.rdb_query(cfg.pgsqldb, 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
         "select orgid from roles_orgs where owneriid = ? and enabled = true", iid)
     if not ok then
         return false, "dbquery failed"
@@ -367,7 +367,7 @@ function _M.getRoleDirectChildrenIds(orgid, roleid)
         string.format("x%x", next_endroleid),
         string.format("%d", next_endroleid)
         )
-    ok, res = c.rdb_query(cfg.pgsqldb, "select roleid from roles where orgid = ? and (roleid & ?) = ? and roleid between ? and ? order by roleid", 
+    ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? and (roleid & ?) = ? and roleid between ? and ? order by roleid", 
         orgid, mask, roleid, next_startroleid, next_endroleid)
     
     if not ok then
@@ -389,14 +389,14 @@ function _M.getRoleChildrenIds(orgid, roleid)
     local ok, res;
 
     if (roleid == 0) then
-        ok, res = c.rdb_query(cfg.pgsqldb, "select roleid from roles where orgid = ? order by roleid", orgid)
+        ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? order by roleid", orgid)
         c.log(1, "|", "getRoleChildrenIds getAll: ", "orgid:" .. orgid, "reslen:" .. #res)
     else
         local level = _getRoleIdLevel(roleid)
         -- local next_roleid = roleid + (1 << (level * 8)) -- 0x3512
         local mask = 0xffffffffffffffff - (0xffffffffffffffff << (level*8))
         c.log(1, "|", "getRoleChildrenIds:", string.format("%x", roleid),  string.format("%x", mask))
-        ok, res = c.rdb_query(cfg.pgsqldb, "select roleid from roles where orgid = ? and (roleid & ?) = ? order by roleid", 
+        ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? and (roleid & ?) = ? order by roleid", 
             orgid, mask, roleid, roleid)
     end
     if not ok then
@@ -434,7 +434,7 @@ function _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
         role_acl_cache = {}
         org_acl_cache[roleid] = role_acl_cache
 
-        local ok, res = c.rdb_query(cfg.pgsqldb, 
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
             "select * from " .. objtable .. " where orgid = ? and roleid = ?", -- objid, " .. aclitem .. "
             orgid, roleid)
         for i = 1, #res do
@@ -451,7 +451,7 @@ function _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
     if (obj_acl_cache ~= nil) then
         return obj_acl_cache, role_acl_cache
     else
-        local ok, res = c.rdb_query(cfg.pgsqldb, 
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
             "select * from " .. objtable .. " where orgid = ? and roleid = ? and objid = ?", -- " .. aclitem .. "
                 orgid, roleid, objid)
         if (ok and #res > 0) then
@@ -560,7 +560,7 @@ end
 function _M.setRoleRight(objtable, orgid, roleid, objid, aclitem, allow)
     local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
     if objitem == nil then
-        local ok, res = c.rdb_query(cfg.pgsqldb, 
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
             "insert into " .. objtable .. "(orgid, roleid, objid, " .. aclitem .. ") values(?, ?, ?, ?)",
                 orgid, roleid, objid, allow)
         lu.assertEquals(ok, true)
@@ -571,7 +571,7 @@ function _M.setRoleRight(objtable, orgid, roleid, objid, aclitem, allow)
             return objitem
         end
 
-        local ok, res = c.rdb_query(cfg.pgsqldb, 
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
             "update " .. objtable .. " set " .. aclitem .. " = ? where orgid = ? and roleid = ? and objid = ?",
                 allow, orgid, roleid, objid)
         lu.assertEquals(ok, true)
@@ -592,7 +592,7 @@ function _M.getRoleUserIds2(orgid, roleid)
         return true, roleid_iids[roleid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
         "select iid from roles_users where orgid=? and roleid=?", orgid, roleid)
     if not ok then
         return false, "dbquery failed"
@@ -622,7 +622,7 @@ function _M.getUserRoleIdVec(iid, orgid)
     end
 
     roleids_vec = {}
-    local ok, res = c.rdb_query(cfg.pgsqldb, 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
         "select roleid from roles_users where iid = ? and orgid = ?", iid, orgid)
     if not ok then
         return {}
@@ -716,7 +716,7 @@ function _M.addUserRole(creatoriid, iid, orgid, roleid)
         end
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb, 
+    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
         "insert into roles_users(orgid, roleid, iid) values(?, ?, ?)", orgid, roleid, iid)
     if not ok then return false; end
     roles[#roles + 1] = roleid
@@ -739,7 +739,7 @@ function _M.delUserRole(creatoriid, iid, orgid, roleid)
         end
 
         local roles = _M.getUserRoleIdVec(iid, orgid)
-        local ok, res = c.rdb_query(cfg.pgsqldb, 
+        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
                 "delete from roles_users where iid = ? and orgid = ?", iid, orgid)
         for k,v in pairs (roles) do
             roles [k] = nil
@@ -758,7 +758,7 @@ function _M.delUserRole(creatoriid, iid, orgid, roleid)
     local roles = _M.getUserRoleIdVec(iid, orgid)
     for i = 1, #roles do
         if (roles[i] == roleid) then
-            local ok, res = c.rdb_query(cfg.pgsqldb, 
+            local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
                 "delete from roles_users where orgid = ? and roleid = ? and iid = ?", orgid, roleid, iid)
 
             _USER_ORG[iid] = {}
