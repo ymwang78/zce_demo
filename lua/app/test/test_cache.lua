@@ -2,7 +2,7 @@
 目前支持redis, local两种cache
 --]]
 local zce = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 local cfg = require('config')
 
 TestCache = {}

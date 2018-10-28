@@ -1,6 +1,6 @@
-local protobuf = require "protobuf"
+local protobuf = require "util.protobuf"
 
-addr = io.open("lua/test/addressbook.pb","rb")
+addr = io.open("lua/app/test/addressbook.pb","rb")
 buffer = addr:read "*a"
 addr:close()
 

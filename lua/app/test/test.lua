@@ -1,5 +1,5 @@
 ﻿local c = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 local cfg = require('test.config')
 _M = {}
 
@@ -9,18 +9,22 @@ function _M.test_me()
 
     cfg.setConfig()
     
-    
+    c.new_service("", "lua/app/test/test_pack.lua")
 
-    c.new_service("test_lpcsvr", "lua/app/test/test_rpc_server.lua", 1217)
+    -- c.new_service("", "lua/app/test/test_package.lua")
 
-    c.new_service("test_lpccli", "lua/app/test/test_rpc_client.lua", tpool, "test_lpcsvr", 1217)
+    -- c.new_service("test_protobuf", "lua/app/test/test_protobuf.lua")
+
+    -- c.new_service("test_lpcsvr", "lua/app/test/test_rpc_server.lua", 1217)
+
+    -- c.new_service("test_lpccli", "lua/app/test/test_rpc_client.lua", tpool, "test_lpcsvr", 1217)
 
     -- c.new_service("test", "lua/app/test/test_cache.lua")
 
     -- c.new_service("test_vmerr", "lua/app/test/test_vmerr.lua", tpool)
-    -- c.new_service("", "lua/app/test/test_rawsocket_server.lua")
+    -- c.new_service("", "lua/app/test/test_websocket_server.lua")
 
-    -- c.new_service("", "lua/app/test/test_rawsocket_client.lua")
+    -- c.new_service("", "lua/app/test/test_websocket_client.lua")
 end
 
 function _M.debug()

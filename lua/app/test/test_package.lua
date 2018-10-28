@@ -1,11 +1,37 @@
 local zce = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 local cfg = require('hawk.config')
 local hp = require('hawk.package.package')
+local hpexc = require('hawk.package.exclude')
 
 TestPackage = {}
 
-function TestPackage:test_package()
+function TestPackage:test_exclude()
+
+    hpexc.clearExcludeCount('gift.hello', '20180101', 1)
+
+    local cnt = hpexc.getExcludeCount('gift.hello', '20180101', 1)
+    local ok = (cnt == 0)
+    lu.assertEquals(ok, true)
+
+    local cnt = hpexc.incExcludeCount('gift.hello', '20180101', 1)
+    local ok = cnt == 1
+    lu.assertEquals(ok, true)
+
+    local cnt = hpexc.getExcludeCount('gift.hello', '20180101', 1)
+    local ok = cnt == 1
+    lu.assertEquals(ok, true)
+
+    local cnt = hpexc.incExcludeCount('gift.hello', '20180101', 1)
+    local ok = cnt == 2
+    lu.assertEquals(ok, true)
+
+    local cnt = hpexc.getExcludeCount('gift.hello', '20180101', 1)
+    local ok = cnt == 2
+    lu.assertEquals(ok, true)
+end
+
+function TestPackage:__test_package()
 
     -- 增加一个背包道具
     local ok, res = hp.addPackage(3, "Pet", { pkgid = 'dog001', pkgtype = 'dog', pkgnum = 1, foot = 4})

@@ -1,5 +1,5 @@
 local c = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 
 function on_http_event(con, event, data)
     if event == "CONN" then

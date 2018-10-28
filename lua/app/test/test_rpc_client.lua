@@ -1,6 +1,6 @@
 local lpcsvrn, rpcport = ...
 local c = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 
 TestRpc = {}
 

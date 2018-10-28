@@ -4,7 +4,7 @@ _G[modename] = _M
 package.loaded[modename] = _M
 
 local zce = require("zce.core")
-local lut = require("luaunit")
+local lut = require("util.luaunit")
 local cfg = require("hawk.config")
 
 -- { orgid: { iid:{xxx} } }

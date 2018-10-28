@@ -1,6 +1,6 @@
 
 local zce = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 
 TestListCodec = {}
 

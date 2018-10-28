@@ -1,6 +1,6 @@
 local c = require "zce.core"
 local cjson = require "cjson"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 
 TestHttpClient = {}
 

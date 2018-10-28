@@ -16,7 +16,7 @@ rpc_suspend 为了防止RPC调用忘记调用rpc_response，导致rpc_call无限
 local rpcport = ...
 
 local c = require "zce.core"
-local lu = require('luaunit')
+local lu = require('util.luaunit')
 
 TestLpcSvr = {}
 

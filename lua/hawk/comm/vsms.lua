@@ -4,7 +4,7 @@ _G[modename] = _M
 package.loaded[modename] = _M
 
 local c = require("zce.core")
-local lu = require("luaunit")
+local lu = require("util.luaunit")
 local cjson = require("cjson")
 local cfg = require("hawk.config")
 

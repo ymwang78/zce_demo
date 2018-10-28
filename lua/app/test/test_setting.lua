@@ -19,14 +19,14 @@ local _M = {
         host = "pgsql.svr",
         port = 3300,
         user = "zhidup",
-        pass = "zhidup",
+        pass = "pwdzhidurl",
         name = "hawk",
     },
 
     redisdb = {
         host = "redis.svr",
         port = 6379,
-        pass = "passwd",    
+        pass = "f7743905699f4320:PwdZhiduR0",    
     },
 
     package = {
