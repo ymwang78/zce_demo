@@ -15,7 +15,7 @@ rpc_suspend 为了防止RPC调用忘记调用rpc_response，导致rpc_call无限
 --]]
 local rpcport = ...
 
-local c = require "zce.core"
+local zce = require "zce.core"
 local lu = require('util.luaunit')
 
 TestLpcSvr = {}
@@ -24,52 +24,52 @@ if rpcport == nil then
     -- rpcport = 1218
 end
 
-local ok, rpcserv = c.rpc_serve("rpc", "0.0.0.0", 1217, "say_")
+local ok, rpcserv = zce.rpc_serve("rpc", "0.0.0.0", 1217, "say_")
 lu.assertEquals( ok, true )
--- local ok, rpcid = c.rpc_ident("lpc", "test_lpcsvr")
+-- local ok, rpcid = zce.rpc_ident("lpc", "test_lpcsvr")
 -- lu.assertEquals( ok, true )
 
 function say_hello(sid, from, v0, v1)
     --c.log(1, " ", "request(say_hello):" , sid, from, v0, v1)
-    c.rpc_response(sid, "hi", "response", rpcport)
+    zce.rpc_response(sid, "hi", "response", rpcport)
 
 end
 
 function say_hello_timeout(sid, from, v0, v1)
-    c.log(1, " ", "request(say_hello_timeout):" , sid, from, v0, v1)
-    c.usleep(6 * 1000)
-    c.rpc_response(sid, "hi", "response", 56789)
+    zce.log(1, " ", "request(say_hello_timeout):" , sid, from, v0, v1)
+    zce.usleep(6 * 1000)
+    zce.rpc_response(sid, "hi", "response", 56789)
 end
 
 function say_hello_noresponse(sid, from, v0, v1)
-    c.log(1, " ", "request(say_hello_noresponse):" , sid, from, v0, v1)
+    zce.log(1, " ", "request(say_hello_noresponse):" , sid, from, v0, v1)
 end
 
 function say_hello_delay(sid, from, v0, v1)
-    c.rpc_suspend(sid, 10000) -- 默认超时5秒，告诉系统最多要10秒，但是对RPC无效
-    c.log(1, " ", "request(say_hello_delay):" , sid, from, v0, v1)
-    c.usleep(6 * 1000)
-    c.rpc_response(sid, "hi", "response", 56789)
+    zce.rpc_suspend(sid, 10000) -- 默认超时5秒，告诉系统最多要10秒，但是对RPC无效
+    zce.log(1, " ", "request(say_hello_delay):" , sid, from, v0, v1)
+    zce.usleep(6 * 1000)
+    zce.rpc_response(sid, "hi", "response", 56789)
 end
 
 function say_hello_cascade(sid, from, v0, v1)
-    c.log(1, " ", "request(say_hello_cascade):" , sid, from, v0, v1)
-    local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", v0, v1) -- 可以再次向自己发起一个RPC调用
-    c.rpc_response(sid,  v0, v1, v2) 
+    zce.log(1, " ", "request(say_hello_cascade):" , sid, from, v0, v1)
+    local ok, v0, v1, v2 = zce.rpc_call(rpcid, "say_hello", v0, v1) -- 可以再次向自己发起一个RPC调用
+    zce.rpc_response(sid,  v0, v1, v2) 
 end
 
 function norpc_say_hello(sid, from, v0, v1)
-    c.rpc_response(sid,  v0, v1, v2) 
+    zce.rpc_response(sid,  v0, v1, v2) 
 end
 
 function TestLpcSvr:_call_self()
-    local ok, v0, v1, v2 = c.rpc_call(rpcid, "say_hello", 2000, "abcd")
-    c.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
+    local ok, v0, v1, v2 = zce.rpc_call(rpcid, "say_hello", 2000, "abcd")
+    zce.log(1, " ", "response(say_hello):", ok, v0, v1, v2)
     lu.assertEquals( ok, true )
 
     -- allow lpc call any method 
-    local ok, v0, v1, v2 = c.rpc_call(rpcid, "norpc_say_hello", 2000, "abcd")
-    c.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
+    local ok, v0, v1, v2 = zce.rpc_call(rpcid, "norpc_say_hello", 2000, "abcd")
+    zce.log(1, " ", "response(norpc_say_hello):", ok, v0, v1, v2)
     lu.assertEquals( ok, true )
 end
 
@@ -80,8 +80,8 @@ lu.run()
 
 c.usleep(500000)
 
--- local ok = c.rpc_close(rpcid)
+-- local ok = zce.rpc_close(rpcid)
 -- lu.assertEquals( ok, true )
 
-local ok = c.rpc_close(rpcserv)
+local ok = zce.rpc_close(rpcserv)
 lu.assertEquals( ok, true )

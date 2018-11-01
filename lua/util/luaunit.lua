@@ -7,7 +7,7 @@ Development by Philippe Fremy <phil@freehackers.org>
 Based on initial work of Ryu, Gwang (http://www.gpgstudy.com/gpgiki/LuaUnit)
 License: BSD License, see LICENSE.txt
 ]]--
-local c = require "zce.core"
+local zce = require "zce.core"
 require("math")
 local M={}
 
@@ -1261,12 +1261,12 @@ end
 function M.ensureEquals(actual, expected, extra_msg_or_nil, doDeepAnalysis)
     if type(actual) == 'table' and type(expected) == 'table' then
         if not _is_table_equals(actual, expected) then
-            c.log(2, "\n", errorMsgEquality(actual, expected, doDeepAnalysis), extra_msg_or_nil)
+            zce.log(2, "\n", errorMsgEquality(actual, expected, doDeepAnalysis), extra_msg_or_nil)
         end
     elseif type(actual) ~= type(expected) then
-        c.log(2, errorMsgEquality(actual, expected), extra_msg_or_nil)
+        zce.log(2, errorMsgEquality(actual, expected), extra_msg_or_nil)
     elseif actual ~= expected then
-        c.log(2, errorMsgEquality(actual, expected), extra_msg_or_nil)
+        zce.log(2, errorMsgEquality(actual, expected), extra_msg_or_nil)
     end
 end
 
@@ -1969,7 +1969,7 @@ TapOutput.__class__ = 'TapOutput'
     end
 
     function TapOutput:endSuite()
-        c.log(1, "\t", '# '..M.LuaUnit.statusLine( self.result ) )
+        zce.log(1, "\t", '# '..M.LuaUnit.statusLine( self.result ) )
         return self.result.notPassedCount
     end
 
@@ -2027,7 +2027,7 @@ JUnitOutput.__class__ = 'JUnitOutput'
     end
 
     function JUnitOutput:endSuite()
-        c.log(1, "\t", '# '..M.LuaUnit.statusLine(self.result))
+        zce.log(1, "\t", '# '..M.LuaUnit.statusLine(self.result))
 
         -- XML file writing
         self.fd:write('<?xml version="1.0" encoding="UTF-8" ?>\n')
@@ -2214,7 +2214,7 @@ TextOutput.__class__ = 'TextOutput'
     end
 
     function TextOutput:displayOneFailedTest( index, fail )
-        c.log(1, "\n", index..") "..fail.testName,
+        zce.log(1, "\n", index..") "..fail.testName,
             fail.msg,
             fail.stackTrace)
     end
@@ -2237,9 +2237,9 @@ TextOutput.__class__ = 'TextOutput'
         end
         self:displayFailedTests()
         print(M.LuaUnit.statusLine( self.result ))
-        c.log(1, "\t", M.LuaUnit.statusLine( self.result ) )
+        zce.log(1, "\t", M.LuaUnit.statusLine( self.result ) )
         if self.result.notPassedCount == 0 then
-            c.log(1, "\t", 'OK')
+            zce.log(1, "\t", 'OK')
         end
     end
 

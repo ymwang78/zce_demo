@@ -3,7 +3,7 @@ local _M = {}
 _G[modename] = _M
 package.loaded[modename] = _M
 
-local c = require("zce.core")
+local zce = require("zce.core")
 local cjson = require("cjson")
 local lu = require("util.luaunit")
 local cfg = require("hawk.config")
@@ -17,7 +17,7 @@ function _M.queryAd(parameters)
         return _AD_CACHE[parameters.id]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
         "select width, height, properties from config_ad where id = ?",
         parameters.id)
     lu.assertEquals(ok, true)
@@ -29,7 +29,7 @@ function _M.queryAd(parameters)
     adobj.properties = cjson.decode(adobj.properties)
 
     _AD_CACHE[cacheid] = adobj
-    c.vmvar_expire(_AD_CACHE, parameters.id, 5 * 60) -- cache 5min
+    zce.vmvar_expire(_AD_CACHE, parameters.id, 5 * 60) -- cache 5min
     return adobj
 end
 
@@ -43,7 +43,7 @@ function _M.queryAdvertise(parameters)
         return _AD_CACHE[parameters.adid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
         "select width, height, properties from config_ad where appid = ? and areaid = ? and adid = ?",
         cfg.appid, parameters.areaid, parameters.adid)
     lu.assertEquals(ok, true)
@@ -55,7 +55,7 @@ function _M.queryAdvertise(parameters)
     adobj.properties = cjson.decode(adobj.properties)
 
     _AD_CACHE[cacheid] = adobj
-    c.vmvar_expire(_AD_CACHE, parameters.adid, 5 * 60) -- cache 5min
+    zce.vmvar_expire(_AD_CACHE, parameters.adid, 5 * 60) -- cache 5min
     return adobj
 end
 
@@ -65,7 +65,7 @@ function _M.queryMessage(parameters)
         return _MESSAGE_CACHE[parameters.id]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
         "select width, height, properties from config_ad where appid = ? and adid = ?",
         cfg.appid, parameters.id)
     lu.assertEquals(ok, true)
@@ -77,7 +77,7 @@ function _M.queryMessage(parameters)
     adobj.properties = cjson.decode(adobj.properties)
 
     _AD_CACHE[parameters.id] = adobj
-    c.vmvar_expire(_AD_CACHE, parameters.id, 5 * 60) -- cache 5min
+    zce.vmvar_expire(_AD_CACHE, parameters.id, 5 * 60) -- cache 5min
     return adobj
 end
 

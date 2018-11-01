@@ -3,7 +3,7 @@ local _M = {}
 _G[modename] = _M
 package.loaded[modename] = _M
 
-local c = require("zce.core")
+local zce = require("zce.core")
 local lu = require("util.luaunit")
 local cjson = require("cjson")
 local util = require("util")
@@ -18,11 +18,11 @@ local function _get_appsecret(appid)
         return _APP_SESCRET[appid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from config_oauth2 where appid = ?", appid)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "select * from config_oauth2 where appid = ?", appid)
     lu.ensureEquals(ok, true, res)
     lu.assertEquals(#res, 1) -- 如果这里错误，需要到config_oauth2表里去添加appid, appsecret
     if not ok or #res < 1 then
-        c.log(3, "\t", "appid not exists in table(config_oauth2): " .. appid)
+        zce.log(3, "\t", "appid not exists in table(config_oauth2): " .. appid)
         return nil
     end
 
@@ -32,9 +32,9 @@ end
 
 -- appid=&iid=&unixtime=&sign=&
 function _M.pwdChallengeLogin(parameters)
-    c.log(1, '\t', 'pwdChallengeLogin:', c.tojson(parameters, true))
+    zce.log(1, '\t', 'pwdChallengeLogin:', zce.tojson(parameters, true))
 
-    local now = c.time_now();
+    local now = zce.time_now();
 
     if math.abs(parameters.unixtime - now) > 300 then
         return nil, "unixtime expire"
@@ -63,8 +63,8 @@ function _M.pwdChallengeLogin(parameters)
             sign = v
         end
     end
-    mysign = c.encode_md5(paramstr)
-    c.log(1, "\t", paramstr, sign, mysign)
+    mysign = zce.encode_md5(paramstr)
+    zce.log(1, "\t", paramstr, sign, mysign)
 
     if sign ~= mysign then
         return nil, "invalid sign"
@@ -72,7 +72,7 @@ function _M.pwdChallengeLogin(parameters)
 
     local login_session = util.shallowCopy(user)
     login_session.passwd = nil
-    login_session.session_key = c.guid()
+    login_session.session_key = zce.guid()
 
     session.saveSession(login_session.session_key, login_session)
 
@@ -80,21 +80,21 @@ function _M.pwdChallengeLogin(parameters)
 end
 
 function _M.sessionKeyLogin(parameters)
-    c.log(1, "\t", "sessionKeyLogin:", c.tojson(parameters, true))
+    zce.log(1, "\t", "sessionKeyLogin:", zce.tojson(parameters, true))
 
     local login_session = session.getSession(parameters.session_key)
     if login_session ~= nil then
-        c.log(1, "\t", "sessionKeyLogin:", c.tojson(login_session, true))
+        zce.log(1, "\t", "sessionKeyLogin:", zce.tojson(login_session, true))
     end
     return login_session
 end
 
 function _M.updateUserInfo(parameters)
-    c.log(1, "\t", "updateUserInfo:", c.tojson(parameters, true))
+    zce.log(1, "\t", "updateUserInfo:", zce.tojson(parameters, true))
 
     local login_session = session.getSession(parameters.session_key)
     if login_session == nil then 
-        c.log(1, "\t", "updateUserInfo not found:", parameters.session_key)
+        zce.log(1, "\t", "updateUserInfo not found:", parameters.session_key)
         return nil
     end
     
@@ -102,11 +102,11 @@ function _M.updateUserInfo(parameters)
         login_session.idcard = tostring(login_session.idcard)
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update users set nick=?, avatar=? where iid=?", 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "update users set nick=?, avatar=? where iid=?", 
         parameters.nickname, parameters.avatarUrl, login_session.iid)
     lu.assertEquals(ok, true)
     lu.assertEquals(#res, 1)
-    --c.log(1, "\t", "auth:", c.tojson(res[1], true))
+    --c.log(1, "\t", "auth:", zce.tojson(res[1], true))
     login_session.nick = parameters.nickname
     login_session.avatar = parameters.avatarUrl
 
@@ -136,7 +136,7 @@ function _M.procHttpReq(data)
 
     elseif (string.match(data.path, "/auth/passwd/sessionKeyLogin")) then
         local user_session = _M.sessionKeyLogin(data.parameters)
-        -- c.log(1, "\t", c.tojson(user_session, true))
+        -- zce.log(1, "\t", zce.tojson(user_session, true))
         if (user_session == nil) then            
             retbody = { code = -501, desc = hint }
         else

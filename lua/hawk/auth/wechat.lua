@@ -3,7 +3,7 @@ local _M = {}
 _G[modename] = _M
 package.loaded[modename] = _M
 
-local c = require("zce.core")
+local zce = require("zce.core")
 local lu = require("util.luaunit")
 local cjson = require("cjson")
 local util = require("util.util")
@@ -18,11 +18,11 @@ local function _get_appsecret(appid)
         return _APP_SESCRET[appid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from config_oauth2 where appid = ?", appid)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "select * from config_oauth2 where appid = ?", appid)
     lu.ensureEquals(ok, true, res)
     lu.assertEquals(#res, 1) -- 如果这里错误，需要到config_oauth2表里去添加appid, appsecret
     if not ok or #res < 1 then
-        c.log(3, "\t", "appid not exists in table(config_oauth2): " .. appid)
+        zce.log(3, "\t", "appid not exists in table(config_oauth2): " .. appid)
         return nil
     end
 
@@ -32,7 +32,7 @@ end
 
 -- 从OPENID查找IID，如果没有，创建一个
 function _M.getIidFromOpenID(openid)
-    local ok, resiid = c.rdb_query(cfg.pgsqldb.dbobj, "select * from users_oauth2 where openid = ?", openid)
+    local ok, resiid = zce.rdb_query(cfg.pgsqldb.dbobj, "select * from users_oauth2 where openid = ?", openid)
     if not ok then
         return ok, nil
     end
@@ -40,11 +40,11 @@ function _M.getIidFromOpenID(openid)
         return  ok, resiid[1].iid
     end
 
-    local ok, resiid = c.rdb_query(cfg.pgsqldb.dbobj, "insert into users(passwd) values (?) returning iid", "")
+    local ok, resiid = zce.rdb_query(cfg.pgsqldb.dbobj, "insert into users(passwd) values (?) returning iid", "")
     lu.ensureEquals(ok, true)
-    c.log(1, "\t", "auth:", c.tojson(resiid[1], true))
+    zce.log(1, "\t", "auth:", zce.tojson(resiid[1], true))
     
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "insert into users_oauth2(openid, iid) values (?, ?)", openid, resiid[1].iid)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "insert into users_oauth2(openid, iid) values (?, ?)", openid, resiid[1].iid)
     lu.assertEquals(ok, true)
 
     return  ok, resiid[1].iid
@@ -52,7 +52,7 @@ end
 
 -- 微信客户端登陆后拿到code从服务端取获取OPENID, SESSIONID, 以及UNIONID(如果有)
 function _M.authCode2Session(parameters)
-    c.log(1, "\t", "authCode2Session:", c.tojson(parameters, true))
+    zce.log(1, "\t", "authCode2Session:", zce.tojson(parameters, true))
 
     local secret = _get_appsecret(parameters.appid)
     if (secret == nil) then
@@ -64,13 +64,13 @@ function _M.authCode2Session(parameters)
         "&js_code=" .. parameters.code ..
         "&grant_type=authorization_code"
 
-    local ok, code, param, body = c.http_request("GET", url, {}, "")
+    local ok, code, param, body = zce.http_request("GET", url, {}, "")
     lu.assertEquals(ok, true)
     lu.assertEquals(code, 200)
 
     local resobj = cjson.decode(body)
     if (resobj.openid == nil) or (resobj.session_key == nil) then
-        c.log(1, "\t", "weixin:jscode2session return:", ok, code, param, body )
+        zce.log(1, "\t", "weixin:jscode2session return:", ok, code, param, body )
         return nil
     end
 
@@ -78,7 +78,7 @@ function _M.authCode2Session(parameters)
     if (not ok) then
         return false, nil
     end
-    c.log(1, "\t", "getIidFromOpenID:", resobj.openid, iid)
+    zce.log(1, "\t", "getIidFromOpenID:", resobj.openid, iid)
 
     local ok, user = user.getUserFromIid(iid)
     lu.ensureEquals(ok, true, user);
@@ -97,25 +97,25 @@ function _M.authCode2Session(parameters)
 end
 
 function _M.sessionKeyLogin(parameters)
-    c.log(1, "\t", "sessionKeyLogin:", c.tojson(parameters, true))
+    zce.log(1, "\t", "sessionKeyLogin:", zce.tojson(parameters, true))
 
     return session.getSession(parameters.session_key)
 end
 
 function _M.updateUserInfo(parameters)
-    c.log(1, "\t", "updateUserInfo:", c.tojson(parameters, true))
+    zce.log(1, "\t", "updateUserInfo:", zce.tojson(parameters, true))
 
     local login_session = session.getSession(parameters.session_key)
     if login_session == nil then 
-        c.log(1, "\t", "updateUserInfo not found:", parameters.session_key)
+        zce.log(1, "\t", "updateUserInfo not found:", parameters.session_key)
         return nil
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update users set nick=?, avatar=? where iid=?", 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "update users set nick=?, avatar=? where iid=?", 
         parameters.nickname, parameters.avatarUrl, login_session.iid)
     lu.assertEquals(ok, true)
     lu.assertEquals(#res, 1)
-    --c.log(1, "\t", "auth:", c.tojson(res[1], true))
+    --c.log(1, "\t", "auth:", zce.tojson(res[1], true))
     login_session.nick = parameters.nickname
     login_session.avatar = parameters.avatarUrl
 
@@ -143,7 +143,7 @@ function _M.procHttpReq(data)
 
     elseif (string.match(data.path, "/auth/wechat/sessionKeyLogin")) then
         local user_session = _M.sessionKeyLogin(data.parameters)
-        -- c.log(1, "\t", c.tojson(user_session, true))
+        -- zce.log(1, "\t", zce.tojson(user_session, true))
         if (user_session == nil) then
             return ""
         else

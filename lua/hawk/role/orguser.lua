@@ -20,6 +20,7 @@ end
 
 function _M.upsertOrgUser(orgid, iid, name, cell, memo, opencard)
     local old_orguser = nil
+    opencard = opencard or ''
     local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
         "select * from users_orgs where orgid=? and iid=?",
         orgid, iid)
@@ -30,7 +31,8 @@ function _M.upsertOrgUser(orgid, iid, name, cell, memo, opencard)
     if #res >= 1 then
         old_orguser = res[1]
     end
-    zce.log(1, "|",ok, #res, orgid, iid, name, cell, memo)
+
+    zce.log(1, "|",ok, #res, orgid, iid, name, cell, memo, opencard)
     if old_orguser == nil then
         ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
             "insert into users_orgs(orgid, iid, name, cell, memo, opencard, regtime) values(?,?,?,?,?,?,now())",

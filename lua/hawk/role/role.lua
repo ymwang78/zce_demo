@@ -3,7 +3,7 @@ local _M = {}
 _G[modename] = _M
 package.loaded[modename] = _M
 
-local c = require("zce.core")
+local zce = require("zce.core")
 local lu = require("util.luaunit")
 local cjson = require("cjson")
 local cfg = require("hawk.config")
@@ -81,16 +81,16 @@ end
 
 -- 获取roleid的前缀，例如 0x1234 得到 level 2
 local function _getRoleIdLevel(roleid)
-    c.log(1, " ", "_getRoleIdLevel", "roleid:" .. roleid)
+    zce.log(1, " ", "_getRoleIdLevel", "roleid:" .. roleid)
     -- if (type(roleid) ~= "number") then
     --     print(debug.traceback())
     -- end
-    if (roleid == 0 or roleid == 1) then
+    if (roleid == 0) then
         return 0
     end
     local role_level = 0
     while roleid ~= 0 do
-        if (roleid & 0xff) ~= 0 and roleid ~= 1 then 
+        if (roleid & 0xff) ~= 0 then 
             roleid = roleid >> 8
             role_level = role_level + 1
         else
@@ -103,17 +103,10 @@ end
 -- 获取上一级的ROLEID，例如 0x011234 得到  0x1234
 local function _getRoleIdUpperLevel(roleid)
     local level = _getRoleIdLevel(roleid)
+    if level <=  1 then return 0 end
     local uproleid = roleid & (0xffffffffffffffff >> ((8-(level - 1)) * 8))
-    c.log(1, "|", "_getRoleIdUpperLevel", level, 'x' .. string.format("%x", roleid), string.format("%x", uproleid))
+    zce.log(1, "|", "_getRoleIdUpperLevel", level, 'x' .. string.format("%x", roleid), string.format("%x", uproleid))
     return uproleid
-end
-
--- 查看这个是否本级管理员，例如 0x011234 得到  true
-local function _isRoleIdAdmin(roleid)
-    local level = _getRoleIdLevel(roleid)
-    local isadmin = ((roleid >> (level * 8)) & 0xff) ==  1
-    c.log(1, "|", "_isRoleIdAdmin", "roleid:" .. roleid, isadmin)
-    return isadmin
 end
 
 local function _getNextRoleId(orgid, father_roleid)
@@ -122,10 +115,10 @@ local function _getNextRoleId(orgid, father_roleid)
     local admin_roleid = father_roleid + (1 << (level * 8))
     local father_mask =0xffffffffffffffff - (0xffffffffffffffff << ((level+0)*8))
     local mask = 0xffffffffffffffff - (0xffffffffffffffff << ((level+1)*8))
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
         [[select * from (select (roleid & ?) as role_id, (roleid & ?) as father_roleid from roles where orgid = ?) as foo where foo.father_roleid = ? order by foo.role_id desc limit 1]],
         mask, father_mask, orgid, father_roleid)
-    c.log(1, "|", "_getNextRoleId",
+    zce.log(1, "|", "_getNextRoleId",
         level,
         father_roleid, 
         string.format("x%x", mask), 
@@ -138,13 +131,6 @@ local function _getNextRoleId(orgid, father_roleid)
     return res[1].role_id + (1 << (level * 8))
 end
 
-function _M.getRoleAdminId(roleid)
-    if (_isRoleIdAdmin(roleid)) then
-        return roleid
-    end
-    local level = _getRoleIdLevel(roleid)
-    return roleid + (1 << ((level) * 8))
-end
 
 function _M.getRoleNonAdminId(roleid)
     if (not _isRoleIdAdmin(roleid)) then
@@ -154,7 +140,7 @@ function _M.getRoleNonAdminId(roleid)
 end
 
 function _M._getRole2(orgid, roleid)
-    c.log(1, " ", "getRole2:", "orgid:" .. orgid, "roleid:" .. roleid)
+    zce.log(1, "|", "getRole2:", "orgid:" .. orgid, "roleid:" .. roleid)
 
     if (_ROLES[orgid] ~= nil) then
         local org_roles = _ROLES[orgid]
@@ -162,28 +148,31 @@ function _M._getRole2(orgid, roleid)
             return true, org_roles[roleid]
         end
 
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles where orgid = ? and roleid = ? order by roleid", orgid, roleid)
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+            "select * from roles where orgid = ? and roleid = ? order by roleid",
+            orgid,
+            roleid)
         if not ok or #res == 0 then
             return false, nil
         end
-        if (_isRoleIdAdmin(res[1].roleid)) then
-            res[1].isadmin = true
-        end
+        --if (iid and _M.canAdminRole(iid, orgid, roleid)) then
+        --    res[1].isadmin = true
+        --end
         org_roles[res[1].roleid] = res[1]
         return true, res[1]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select * from roles where orgid = ? order by roleid", orgid)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "select * from roles where orgid = ? order by roleid", orgid)
     if not ok or #res == 0 then
         return false, nil
     end
     local org_roles = {}
     for i = 1, #res do
-        if (_isRoleIdAdmin(res[i].roleid)) then
-            res[i].isadmin = true
-        end
+        --if (iid and _M.canAdminRole(iid, orgid, res[i].roleid)) then
+        --    res[i].isadmin = true
+        --end
         org_roles[res[i].roleid] = res[i]
-        c.log(1, " ", "getRole2:", "orgid:" .. orgid, c.tojson(res[i], true))
+        zce.log(1, " ", "getRole2:", "orgid:" .. orgid, zce.tojson(res[i], true))
     end
 
     _ROLES[orgid] = org_roles
@@ -193,54 +182,51 @@ function _M._getRole2(orgid, roleid)
     return true, org_roles[roleid]
 end
 
-function _M.checkRoleRoot(orgid, roleid, owneriid)
-    c.log(1, " ", "checkRoleRoot:", "roleid:" .. roleid)
-    local level = _getRoleIdLevel(roleid) -- 0x1234
-    local public_roleid = roleid
-    local admin_roleid = roleid + (1 << (level * 8))
+function _M.checkRoleRoot(orgid, roleid)
+    zce.log(1, "|", "checkRoleRoot", "orgid" .. orgid, "roleid:" .. roleid)
+    
+    local ok, res =  zce.rdb_query(cfg.pgsqldb.dbobj,
+        "select count(*) as rownum from roles where orgid = ? and roleid = ?", 
+        orgid, 
+        roleid)
 
-    local ok, res =  c.rdb_query(cfg.pgsqldb.dbobj, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, public_roleid)
     if (ok and res[1].rownum < 1) then
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj,
-            "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
-            orgid, public_roleid, owneriid, "全体成员", "普通成员")
-    end    
-
-    local ok, res =  c.rdb_query(cfg.pgsqldb.dbobj, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, admin_roleid)
-    if (ok and res[1].rownum < 1) then
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
-            "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
-            orgid, admin_roleid, owneriid, "管理员", "管理成员")
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj,
+            "insert into roles(orgid, roleid, rolename, roledesc) values(?, ?, ?, ?)",
+            orgid, roleid, "全体成员", "默认分组")
     end
+    --[[
+    local level = _getRoleIdLevel(roleid) -- 0x1234
+    local admin_roleid = roleid + (1 << (level * 8))
+    local ok, res =  zce.rdb_query(cfg.pgsqldb.dbobj, "select count(*) as rownum from roles where orgid = ? and roleid = ?", orgid, admin_roleid)
+    if (ok and res[1].rownum < 1) then
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+            "insert into roles(orgid, roleid, rolename, roledesc) values(?, ?, ?, ?, ?)",
+            orgid, admin_roleid, "管理员", "管理成员")
+    end
+    ]]
 end
 
+-- 查询当前角色，如果不存在根角色，则创建一个
 function _M.getRole2(orgid, roleid)
     local ok, role = _M._getRole2(orgid, roleid)
-    if ((not ok or role == nil) and (roleid == 0 or roleid == 1)) then
+    if ((not ok or role == nil) and (roleid == 0)) then
         local org = hro.getOrg(orgid)
-        _M.checkRoleRoot(orgid, 0, org.owneriid)
+        _M.checkRoleRoot(orgid, 0)
         return _M._getRole2(orgid, roleid)
     end
     return ok, role 
 end
 
-function _M.addRole(orgid, father_roleid, owneriid, name, desc)
-    c.log(1, " ", "addRole:", father_roleid)
-
-    if (_isRoleIdAdmin(father_roleid)) then
-        -- can't add role under admin
-        return nil
-    end
-
-    if owneriid == nil then
-        owneriid = 0
-    end
+function _M.addRole(orgid, father_roleid, name, desc)
+    zce.log(1, " ", "addRole:", father_roleid)
 
     local next_roleid = _getNextRoleId(orgid, father_roleid)
-    c.log(1, "\t", "addRole:", string.format("%x", father_roleid), string.format("%x", next_roleid))
+    zce.log(1, "\t", "addRole:", string.format("%x", father_roleid), string.format("%x", next_roleid))
     
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "insert into roles(orgid, roleid, owneriid, rolename, roledesc) values(?, ?, ?, ?, ?)",
-        orgid, next_roleid, owneriid, name, desc)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "insert into roles(orgid, roleid, rolename, roledesc) values(?, ?, ?, ?)",
+        orgid, next_roleid, name, desc)
     if not ok or #res < 1 then
         return nil
     end
@@ -258,22 +244,22 @@ function _M.addRole(orgid, father_roleid, owneriid, name, desc)
     return next_roleid
 end
 
-function _M.updateRole2(orgid, roleid, owneriid, rolename, roledesc)
+function _M.updateRole2(orgid, roleid, rolename, roledesc)
     local ok, role = _M.getRole2(orgid, roleid)
     if (not ok or role == nil) then
-        c.log(1, " ", "updateRole2 not found:", orgid, roleid)
+        zce.log(1, " ", "updateRole2 not found:", orgid, roleid)
         return false, nil
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "update roles set owneriid=?, rolename=?, roledesc=? where orgid=? and roleid=?",
-        owneriid, rolename, roledesc, orgid, roleid)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "update roles set rolename=?, roledesc=? where orgid=? and roleid=?",
+        rolename, roledesc, orgid, roleid)
 
     if not ok then
-        c.log(1, " ", "updateRole2 update:", ok, res)
+        zce.log(1, " ", "updateRole2 update:", ok, res)
         return false, nil
     end
 
-    role.owneriid = owneriid
     role.rolename = rolename
     role.roledesc = roledesc
 
@@ -286,7 +272,7 @@ function _M.deleteRole(orgid, roleid)
         return false
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "delete from roles where orgid=? and roleid=?",
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "delete from roles where orgid=? and roleid=?",
         orgid, roleid)
 
     if not ok then
@@ -320,26 +306,42 @@ local function _getUserOrgs(objtable, iid)
 
     local orgs = {}
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
-        "select DISTINCT orgid from roles_users where iid = ? and orgid in (select DISTINCT orgid from " .. objtable .. ")", iid)
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "select DISTINCT orgid from roles_users where iid = ? and orgid in (select DISTINCT orgid from " .. objtable .. ")",
+        iid)
     if not ok then
         return false, "dbquery failed"
     end
 
     for i = 1, #res do
-        c.log(1, " ", "_getUserOrgs roles_users:", res[i].orgid)
+        zce.log(1, " ", "_getUserOrgs roles_users:", res[i].orgid)
         orgs[res[i].orgid] = true
     end
 
-    -- and orgid in (select DISTINCT orgid from " .. objtable .. ")
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
-        "select orgid from roles_orgs where owneriid = ? and enabled = true", iid)
+    ---[[
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "select DISTINCT orgid from roles_acl_user where roleid = ?",
+        iid)
     if not ok then
         return false, "dbquery failed"
     end
 
     for i = 1, #res do
-        -- c.log(1, " ", "_getUserOrgs roles_orgs:", res[i].orgid)
+        zce.log(1, " ", "_getUserOrgs roles_users:", res[i].orgid)
+        orgs[res[i].orgid] = true
+    end
+    --]]
+
+    -- and orgid in (select DISTINCT orgid from " .. objtable .. ")
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "select orgid from roles_orgs where owneriid = ? and enabled = true",
+        iid)
+    if not ok then
+        return false, "dbquery failed"
+    end
+
+    for i = 1, #res do
+        -- zce.log(1, " ", "_getUserOrgs roles_orgs:", res[i].orgid)
         orgs[res[i].orgid] = true
     end
 
@@ -349,7 +351,7 @@ end
 
 -- 只获取子部门列表，不包含自身以及孙部门
 function _M.getRoleDirectChildrenIds(orgid, roleid)
-    c.log(1, "|", "getRoleDirectChildrenIds ", "orgid:" .. orgid, "roleid:x" .. string.format("%x", roleid))
+    zce.log(1, "|", "getRoleDirectChildrenIds ", "orgid:" .. orgid, "roleid:x" .. string.format("%x", roleid))
    
     local ok, res;
 
@@ -358,7 +360,7 @@ function _M.getRoleDirectChildrenIds(orgid, roleid)
     local next_startroleid = roleid_prefix + (2 << (level * 8)) -- 0x3512
     local next_endroleid = roleid_prefix + (255 << (level * 8)) -- 0x3512
     local mask = 0xffffffffffffffff - (0xffffffffffffffff << (level*8))
-    c.log(1, "|", "getRoleDirectChildrenIds:",
+    zce.log(1, "|", "getRoleDirectChildrenIds:",
         string.format("%d", orgid),
         string.format("x%x", mask),
         string.format("x%x", roleid),
@@ -367,7 +369,7 @@ function _M.getRoleDirectChildrenIds(orgid, roleid)
         string.format("x%x", next_endroleid),
         string.format("%d", next_endroleid)
         )
-    ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? and (roleid & ?) = ? and roleid between ? and ? order by roleid", 
+    ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? and (roleid & ?) = ? and roleid between ? and ? order by roleid", 
         orgid, mask, roleid, next_startroleid, next_endroleid)
     
     if not ok then
@@ -384,19 +386,19 @@ end
 
 --获取所有自身，子部门，孙部门的列表
 function _M.getRoleChildrenIds(orgid, roleid)
-    c.log(1, "|", "getRoleChildrenIds ", "orgid:" .. orgid, "roleid:x" .. string.format("%x", roleid))
+    zce.log(1, "|", "getRoleChildrenIds ", "orgid:" .. orgid, "roleid:x" .. string.format("%x", roleid))
    
     local ok, res;
 
     if (roleid == 0) then
-        ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? order by roleid", orgid)
-        c.log(1, "|", "getRoleChildrenIds getAll: ", "orgid:" .. orgid, "reslen:" .. #res)
+        ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? order by roleid", orgid)
+        zce.log(1, "|", "getRoleChildrenIds getAll: ", "orgid:" .. orgid, "reslen:" .. #res)
     else
         local level = _getRoleIdLevel(roleid)
         -- local next_roleid = roleid + (1 << (level * 8)) -- 0x3512
         local mask = 0xffffffffffffffff - (0xffffffffffffffff << (level*8))
-        c.log(1, "|", "getRoleChildrenIds:", string.format("%x", roleid),  string.format("%x", mask))
-        ok, res = c.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? and (roleid & ?) = ? order by roleid", 
+        zce.log(1, "|", "getRoleChildrenIds:", string.format("%x", roleid),  string.format("%x", mask))
+        ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, "select roleid from roles where orgid = ? and (roleid & ?) = ? order by roleid", 
             orgid, mask, roleid, roleid)
     end
     if not ok then
@@ -415,7 +417,7 @@ end
 
 -- 返回两个对象，第一个是具体设备的对象，第二个是角色对所有设备的集合对象
 function _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
-    c.log(1, " ", "getRoleRightItem:", objtable, orgid, roleid, objid, aclitem)
+    zce.log(1, "|", "getRoleRightItem", objtable, orgid, roleid, objid, aclitem)
 
     local root_acl_cache = _ROLE_ACL[objtable]
     if (root_acl_cache == nil) then
@@ -434,11 +436,11 @@ function _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
         role_acl_cache = {}
         org_acl_cache[roleid] = role_acl_cache
 
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
             "select * from " .. objtable .. " where orgid = ? and roleid = ?", -- objid, " .. aclitem .. "
             orgid, roleid)
         for i = 1, #res do
-            -- c.log(1, "\t", "getRoleRightItem:", c.tojson(res[i]))
+            -- zce.log(1, "\t", "getRoleRightItem:", zce.tojson(res[i]))
             role_acl_cache[res[i].objid] = res[i]
         end
     end
@@ -451,7 +453,7 @@ function _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
     if (obj_acl_cache ~= nil) then
         return obj_acl_cache, role_acl_cache
     else
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
             "select * from " .. objtable .. " where orgid = ? and roleid = ? and objid = ?", -- " .. aclitem .. "
                 orgid, roleid, objid)
         if (ok and #res > 0) then
@@ -481,7 +483,7 @@ function _M.getRoleRightRecur(objtable, orgid, roleid, objid, aclitem)
     local father_roleid = roleid
     while father_roleid~=0 do
         father_roleid = _getRoleIdUpperLevel(father_roleid)
-        c.log(1, "", "check father:", father_roleid)
+        zce.log(1, "", "check father:", father_roleid)
         local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, father_roleid, objid, aclitem)
         if (objitem and objitem[aclitem] == true) then
             return objitem
@@ -490,7 +492,7 @@ function _M.getRoleRightRecur(objtable, orgid, roleid, objid, aclitem)
 
     -- if is admin, check children's acl
     local children = _M.getRoleChildrenIds(orgid, roleid)
-    c.log(1, "", "check children", c.tojson(children))
+    zce.log(1, "", "check children", zce.tojson(children))
     for i = 1, #children do
         if (children[i] ~= roleid) then
             local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, children[i], objid, aclitem)
@@ -503,46 +505,21 @@ function _M.getRoleRightRecur(objtable, orgid, roleid, objid, aclitem)
     return nil
 end
 
--- 返回 { { devid: { aclojb} }, ... }
+-- 返回 { { devid: { aclojb } }, ... }
 function _M.getRoleRightAllItemDict(objtable, orgid, roleid, aclitem, objitem_array)
-    c.log(1, " ", "getRoleRightAllItemDict:", "objtable:" .. objtable, "orgid:" .. orgid, "roleid:" .. roleid, "aclitem:" .. aclitem)
-    -- global admin, just allow everything
-    if (roleid == 1) then
-        local ok, devs = dd.getUnitDianDevice(orgid)
-        if not ok or #devs == 0 then
-            return {}
-        end
-        for k,v in pairs(devs) do 
-            objitem_array[v.devid] = { orgid = orgid, roleid = roleid, objid = v.devid, admin = true}
-        end
-        -- c.log(1, " ", "getUnitDianDevice:", ok, c.tojson(objitem_array, true))
-        return objitem_array
-    end
+    zce.log(1, " ", "getRoleRightAllItemDict:", "objtable:" .. objtable, "orgid:" .. orgid, "roleid:" .. roleid, "aclitem:" .. aclitem)
 
-    -- check self 
+    -- check self
     local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, roleid, '*', aclitem)
     for k,v in pairs(roleitem) do objitem_array[k] = v end
 
     -- find parent share obj acl
     local father_roleid = roleid
-    while father_roleid~=0 do
+    while father_roleid ~= 0 do
         father_roleid = _getRoleIdUpperLevel(father_roleid)
-        c.log(1, "", "check father:", father_roleid)
+        zce.log(1, "", "check father:", father_roleid)
         local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, father_roleid, '*', aclitem)
         for k,v in pairs(roleitem) do objitem_array[k] = v end
-    end
-
-    -- if is admin, check children's acl
-    if (_isRoleIdAdmin(roleid)) then
-        local uproleid = _getRoleIdUpperLevel(roleid)
-        local children = _M.getRoleChildrenIds(orgid, uproleid)
-        c.log(1, "", "check children", c.tojson(children))
-        for i = 1, #children do
-            if (children[i] ~= roleid) then
-                local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, children[i], '*', aclitem)
-                for k,v in pairs(roleitem) do objitem_array[k] = v end
-            end
-        end
     end
 
     return objitem_array
@@ -560,7 +537,7 @@ end
 function _M.setRoleRight(objtable, orgid, roleid, objid, aclitem, allow)
     local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
     if objitem == nil then
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
             "insert into " .. objtable .. "(orgid, roleid, objid, " .. aclitem .. ") values(?, ?, ?, ?)",
                 orgid, roleid, objid, allow)
         lu.assertEquals(ok, true)
@@ -571,7 +548,7 @@ function _M.setRoleRight(objtable, orgid, roleid, objid, aclitem, allow)
             return objitem
         end
 
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
             "update " .. objtable .. " set " .. aclitem .. " = ? where orgid = ? and roleid = ? and objid = ?",
                 allow, orgid, roleid, objid)
         lu.assertEquals(ok, true)
@@ -592,7 +569,7 @@ function _M.getRoleUserIds2(orgid, roleid)
         return true, roleid_iids[roleid]
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
         "select iid from roles_users where orgid=? and roleid=?", orgid, roleid)
     if not ok then
         return false, "dbquery failed"
@@ -607,9 +584,9 @@ function _M.getRoleUserIds2(orgid, roleid)
 end
 -----------------------------------------------------------------------------------------------------
 
--- 查询用户在该组织的所有角色
+-- 查询用户在该组织的所有角色，不包括具有管理权限的子角色
 function _M.getUserRoleIdVec(iid, orgid)
-    c.log(1, " ", "getUserRoleIdVec:", "iid:" .. iid, "orgid:" .. orgid)
+    zce.log(1, "|", "getUserRoleIdVec", "iid:" .. iid, "orgid:" .. orgid)
     local user_org_roleidvec = _USER_ORG_ROLEIDVEC[iid]
     if (user_org_roleidvec == nil) then
         user_org_roleidvec = {} --{ orgid : { roleid1, roleid2 ...}}
@@ -621,27 +598,32 @@ function _M.getUserRoleIdVec(iid, orgid)
         return roleids_vec
     end
 
+    local roles = {}
+
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "select objid from roles_acl_user where roleid = ? and orgid = ? order by roleid",
+        iid,
+        orgid)
+    if res and #res > 0 then
+        for i = 1, #res do
+            roles[res[i].objid] = true
+        end
+    end
+
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "select roleid from roles_users where iid = ? and orgid = ? order by roleid",
+        iid,
+        orgid)
+    if res and #res > 0 then
+        for i = 1, #res do
+            roles[res[i].roleid] = true
+        end
+    end
+
     roleids_vec = {}
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
-        "select roleid from roles_users where iid = ? and orgid = ?", iid, orgid)
-    if not ok then
-        return {}
-    end
 
-    local is_root_admin = false
-    for i = 1, #res do 
-        roleids_vec[#roleids_vec + 1] = res[i].roleid
-        if (res[i].roleid == 1) then
-            is_root_admin = true
-        end
-    end
-
-    if not is_root_admin then
-        local org = hro.getOrg(orgid)
-        if (org.owneriid == iid) then
-            is_root_admin = true
-            roleids_vec[#roleids_vec + 1] = 1
-        end
+    for k, v in pairs(roles) do
+        roleids_vec[#roleids_vec + 1] = k
     end
 
     user_org_roleidvec[orgid] = roleids_vec
@@ -649,35 +631,51 @@ function _M.getUserRoleIdVec(iid, orgid)
 end
 
 function _M.canAdminRole(iid, orgid, roleid)
-    c.log(1, "|", "_canAdminRole", iid, orgid, roleid)
+    zce.log(1, "|", "canAdminRole", iid, orgid, roleid)
     -- if owner ,allow
     local org = hro.getOrg(orgid)
     if (org ~= nil and org.owneriid == iid) then
         return true
     end
 
-    local roleids = _M.getUserRoleIdVec(iid, orgid)
-    for i = 1, #roleids do
-        if (_isRoleIdAdmin(roleids[i])) then
-            local level = _getRoleIdLevel(roleids[i]) - 1
-            local mask = 0xffffffffffffffff >> ((8-level)*8)
-            c.log(1, "\t", "_canAdminRole:", string.format("%x", roleid),  string.format("%x", roleids[i]), level, newlevel)
-            if ((roleids[i] & mask) == (roleid & mask)) then
-                return true
-            end
+    -- roles_acl_user 特殊处理，useriid作为role, roleid作为obj
+    local acl, aclall = _M.getRoleRightItem('roles_acl_user', orgid, iid, roleid, '*')
+    zce.log(1, "|", "canAdminRole", iid, orgid, roleid, zce.tojson(acl, true), zce.tojson(aclall, true))
+
+    if acl ~= nil  then
+        if aclall == nil then return false; end
+        if aclall[roleid] == nil then return false; end
+        acl = aclall[roleid]
+    end
+
+    if acl ~= nil then return true; end
+
+    local level = _getRoleIdLevel(roleid)
+    if level == 0 then
+        return false
+    end
+
+    if aclall == nil then return false end
+
+    local mask = 0xffffffffffffffff >> ((8-level)*8)
+    for k, v in pairs(aclall) do
+        if ((v.objid & mask) == (roleid & mask)) then
+            return true
         end
     end
+
     return false    
 end
+
 -- 查询用户在该组织的所有角色
 function _M.getUserOrgRoles2(iid, orgid, roles)
-    c.log(1, "|", "getUserOrgRoles2", "iid:" .. iid, "orgid:" .. orgid, "roles:" .. c.tojson(roles, true))
+    zce.log(1, "|", "getUserOrgRoles2", "iid:" .. iid, "orgid:" .. orgid, "roles:" .. zce.tojson(roles, true))
 
     local roleids = _M.getUserRoleIdVec(iid, orgid)
     for i = 1, #roleids do
         local ok, role = _M.getRole2(orgid, roleids[i])
         if ok and role ~= nil then
-            if (_isRoleIdAdmin(roleids[i])) then
+            if (_M.canAdminRole(iid, orgid, roleids[i])) then
                 role.isadmin = true
             end
             roles[#roles + 1] = role
@@ -702,8 +700,8 @@ function _M.getUserOrgAdminRoles2(iid, orgid, adminroles)
 end
 
 -- 增加用户在该组织的角色
-function _M.addUserRole(creatoriid, iid, orgid, roleid)
-    c.log(1, "|", "addUserRole", creatoriid, iid, orgid, roleid)
+function _M.addRoleUser(creatoriid, iid, orgid, roleid)
+    zce.log(1, "|", "addRoleUser", creatoriid, iid, orgid, roleid)
     local roles = _M.getUserRoleIdVec(iid, orgid)
     local allow = _M.canAdminRole(creatoriid, orgid, roleid)
     if (not allow) then
@@ -716,30 +714,34 @@ function _M.addUserRole(creatoriid, iid, orgid, roleid)
         end
     end
 
-    local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
-        "insert into roles_users(orgid, roleid, iid) values(?, ?, ?)", orgid, roleid, iid)
-    if not ok then return false; end
-    roles[#roles + 1] = roleid
+    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
+        "insert into roles_users(orgid, roleid, iid) values(?, ?, ?)",
+        orgid,
+        roleid,
+        iid)
 
+    if not ok then return false; end
+
+    roles[#roles + 1] = roleid
     _M.clearUserRoleCache(iid)
     _ORG_ROLE_IID = {}
     return true
 end
 
 -- 删除用户在该组织的所有角色, *表示所有
-function _M.delUserRole(creatoriid, iid, orgid, roleid)
+function _M.delRoleUser(creatoriid, iid, orgid, roleid)
     if (creatoriid == nil or iid == nil or orgid == nil or roleid == nil) then
         print(debug.traceback())
     end
 
     if (roleid == '*') then
-        local allow = _canAdminRole(creatoriid, orgid, 0)
+        local allow = _M.canAdminRole(creatoriid, orgid, 0)
         if (not allow) then
             return false, "now allowed"
         end
 
         local roles = _M.getUserRoleIdVec(iid, orgid)
-        local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+        local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
                 "delete from roles_users where iid = ? and orgid = ?", iid, orgid)
         for k,v in pairs (roles) do
             roles [k] = nil
@@ -758,7 +760,7 @@ function _M.delUserRole(creatoriid, iid, orgid, roleid)
     local roles = _M.getUserRoleIdVec(iid, orgid)
     for i = 1, #roles do
         if (roles[i] == roleid) then
-            local ok, res = c.rdb_query(cfg.pgsqldb.dbobj, 
+            local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
                 "delete from roles_users where orgid = ? and roleid = ? and iid = ?", orgid, roleid, iid)
 
             _USER_ORG[iid] = {}
@@ -776,11 +778,11 @@ function _M.getUserRoleRightAllitem(objtable, iid, orgid, aclitem, objitem_array
     local roleids = {}
     local org = hro.getOrg(orgid)
     if (org == nil) then
-        c.log(1, " ", orgid, "not exists")
+        zce.log(1, " ", orgid, "not exists")
         return objitem_array
     end
-    if (iid == org.owneriid) then 
-        roleids[#roleids + 1] = 1
+    if (iid == org.owneriid) then
+        roleids[#roleids + 1] = 0
     else
         roleids = _M.getUserRoleIdVec(iid, orgid)
         if (roleids == nil) then
@@ -789,6 +791,7 @@ function _M.getUserRoleRightAllitem(objtable, iid, orgid, aclitem, objitem_array
     end
 
     for i = 1, #roleids do
+        local isadmin = _M.canAdminRole(iid, orgid, roleids[i])
         _M.getRoleRightAllItemDict(objtable, orgid, roleids[i], aclitem, objitem_array)
     end
     return objitem_array
@@ -798,7 +801,7 @@ end
 function _M.getUserRightAllitem(objtable, iid, aclitem)
     local ok, orgids = _getUserOrgs(objtable, iid)
     lu.ensureEquals(ok, true, orgids)
-    c.log(1, "\t", "getUserRightAllitem", "iid:" .. iid, c.tojson(orgids, true))
+    zce.log(1, "\t", "getUserRightAllitem", "iid:" .. iid, zce.tojson(orgids, true))
 
     local objitem_array = {}
     for k in pairs(orgids) do
@@ -813,7 +816,7 @@ function _M.getUserOrgs(objtable, iid)
 
     local orgs = {}
     for k in pairs(orgids) do
-        c.log(1, "\t", "getUserOrgs:", k)
+        zce.log(1, "\t", "getUserOrgs:", k)
         local org = hro.getOrg(k)
         if org ~= nil then
             orgs[org.orgid] = org
@@ -828,13 +831,13 @@ function _M.getUserAllRoles2(objtable, iid)
     local ok, orgids = _getUserOrgs(objtable, iid)
     lu.ensureEquals(ok, true, orgids)
 
-    c.log(1, "\t", "getUserAllRoles2:", c.tojson(orgids, true))
+    zce.log(1, "\t", "getUserAllRoles2:", zce.tojson(orgids, true))
     local roles = {}
 
     for k in pairs(orgids) do
-        --c.log(1, "\t", "getUserAllRoles2:", c.tojson(roles, true))
+        --c.log(1, "\t", "getUserAllRoles2:", zce.tojson(roles, true))
         local ok, roles = _M.getUserOrgRoles2(iid, k, roles)
-        --c.log(1, "\t", "getUserAllRoles2:", c.tojson(roles, true))
+        --c.log(1, "\t", "getUserAllRoles2:", zce.tojson(roles, true))
     end
     return ok, roles
 end
@@ -842,17 +845,17 @@ end
 -----------------------------------------------------------------------------------------------------
 function _M.doTestRole(useriid, orgid)
 
-    local ok, err = _M.addRole(orgid, 0, 0, 'testrole', 'testroledesc')
+    local ok, err = _M.addRole(orgid, 0, 'testrole', 'testroledesc')
 
-    local ok, err = _M.delUserRole(useriid, orgid, '*')
+    local ok, err = _M.delRoleUser(useriid, orgid, '*')
     lu.assertEquals(ok, true, err)
 
     local roles = _M.getUserRoleIdVec(useriid, orgid)
     lu.assertEquals(#roles, 0)
 
-    local ok = _M.addUserRole(useriid, orgid, 0)
+    local ok = _M.addRoleUser(useriid, orgid, 0)
     lu.assertEquals(ok, true)
-    local ok = _M.addUserRole(useriid, orgid, 0x1)
+    local ok = _M.addRoleUser(useriid, orgid, 0x1)
     lu.assertEquals(ok, true)
 
     local roles = _M.getUserRoleIdVec(useriid, orgid)
@@ -867,7 +870,7 @@ function _M.doTestMe()
     local objitem_array = {}
     _M.doTestRole(useriid, orgid)
     local objarray = _M.getUserRoleRightAllitem("dian_roles_acl_device", useriid, orgid, "indoor", objitem_array)
-    c.log(1, "\t", "getUserRoleRightAllitem:", c.tojson(objarray, true))
+    zce.log(1, "\t", "getUserRoleRightAllitem:", zce.tojson(objarray, true))
     return objarray
 end
 
@@ -877,12 +880,12 @@ function _M.doTestMe2()
   -- http://127.0.0.1:8080/role/addRole?session_key=q7YTs9%2BrrMo%2FhDGGBg3%2BAA%3D%3D&appid=wxa601a1185a9afbc9&orgid=1&father_roleid=0&role_name=testdepartment&role_desc=desc
   -- http://127.0.0.1:8080/role/createOrg?session_key=q7YTs9%2BrrMo%2FhDGGBg3%2BAA%3D%3D&appid=wxa601a1185a9afbc9&orgname=diandian
 --[[
-    local dep_rd =  _M.addRole(1, 0, 0, "R&D","研发部")
-    local dep_fn =_M.addRole(1, 0, 0, "Finacial","财务部")
-    _M.addRole(1, dep_rd.roleid, 0, "TestDepartment","测试组")
-    _M.addRole(1, dep_rd.roleid, 0, "DesignDepartment","设计组")
-    _M.addRole(1, dep_fn.roleid, 0, "In","收钱组")
-    _M.addRole(1, dep_fn.roleid, 0, "Out","付钱组")
+    local dep_rd =  _M.addRole(1, 0, "R&D","研发部")
+    local dep_fn =_M.addRole(1, 0, "Finacial","财务部")
+    _M.addRole(1, dep_rd.roleid, "TestDepartment","测试组")
+    _M.addRole(1, dep_rd.roleid, "DesignDepartment","设计组")
+    _M.addRole(1, dep_fn.roleid, "In","收钱组")
+    _M.addRole(1, dep_fn.roleid, "Out","付钱组")
 --]]
 
     local father_roleid = 0x12
@@ -929,19 +932,9 @@ function _M.doTestMe2()
     local adobj = _M.getRoleRight("dian_roles_acl_device", 1, 0x302, 2, "indoor")
     lu.assertEquals(adobj["indoor"], false)
 
-    lu.assertEquals(_isRoleIdAdmin(0), false)
-
-    lu.assertEquals(_isRoleIdAdmin(0x1), true)
-
-    lu.assertEquals(_isRoleIdAdmin(0x2), false)
-
-    lu.assertEquals(_isRoleIdAdmin(0x102), true)
-
-    lu.assertEquals(_isRoleIdAdmin(0x202), false)
-
     local obj_all = {}
-    local objarray = _M.getRoleRightAllItemDict("dian_roles_acl_device", 1, 0x202, "indoor", obj_all)
-    c.log(1, "\t", "getRoleRightAllItemDict:", c.tojson(objarray))
+    local objarray = _M.getRoleRightAllItemDict("dian_roles_acl_device", 1, 0x202, "indoor", obj_all, true)
+    zce.log(1, "\t", "getRoleRightAllItemDict:", zce.tojson(objarray))
 
     return adobj
 end
@@ -964,7 +957,7 @@ function _M.procHttpReq(data)
     if (string.match(data.path, "/role/addOrg")) then
         adobj = _M.addOrg(login_session.iid, data.parameters.orgname)
     elseif (string.match(data.path, "/role/addRole")) then
-        adobj = _M.addRole(data.parameters.orgid, data.parameters.father_roleid, data.parameters.owneriid, data.parameters.role_name, data.parameters.role_desc)
+        adobj = _M.addRole(data.parameters.orgid, data.parameters.father_roleid, data.parameters.role_name, data.parameters.role_desc)
     elseif (string.match(data.path, "/role/getRoleRight")) then
         adobj = _M.getRoleRight(data.parameters.orgid, data.parameters.roleid, data.parameters.objid, data.parameters.aclitem)
     elseif (string.match(data.path, "/role/setRoleRight")) then

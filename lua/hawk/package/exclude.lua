@@ -1,3 +1,10 @@
+﻿--[[
+    本模块实现时段限制得资源使用统计，例如每周只能领一次的礼包
+    itemid, 是资源的标识, 例如 libao.libaoid001
+    timeid, 是时间的标识, 在util.getTimeId里提供了常见的几个timeid生成的方式
+    userid, 是用户标识
+]]
+
 local modename = ...
 local _M = {}
 _G[modename] = _M

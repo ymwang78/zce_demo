@@ -1,9 +1,9 @@
-local c = require "zce.core"
+local zce = require "zce.core"
 local lu = require('util.luaunit')
 
 TestRawSocket = {}
 
-local ok, reactorobj = c.reactor_start()
+local ok, reactorobj = zce.reactor_start()
 
 function do_stat_send(con, ok, bytes)
     if (ok) then
@@ -19,7 +19,7 @@ function on_rawsock_client(con, event, data)
     if event == "CONN" then
 
         con.globstat.conn_count = con.globstat.conn_count + 1
-        local ok, bytes = c.tcp_send(con, "world\n", 0, 5);
+        local ok, bytes = zce.tcp_send(con, "world\n", 0, 5);
         lu.assertEquals(ok, true)
 
         do_stat_send(con, ok, bytes)
@@ -29,7 +29,7 @@ function on_rawsock_client(con, event, data)
         con.globstat.recv_bytes = con.globstat.recv_bytes + string.len(data)
         con.connstat.recvcall_count = con.connstat.recvcall_count + 1
 
-        local ok, bytes = c.tcp_send(con, data);
+        local ok, bytes = zce.tcp_send(con, data);
         lu.assertEquals(ok, true)
 
         do_stat_send(con, ok, bytes)
@@ -40,7 +40,7 @@ function on_rawsock_client(con, event, data)
 
     elseif event == "DISC" then
         con.globstat.close_count = con.globstat.close_count + 1
-        c.tcp_close(con)
+        zce.tcp_close(con)
     end
     return true
 end
@@ -65,7 +65,7 @@ function TestRawSocket:test_tcp()
             curstat.send_failed = 0;
 
             local con = { peerip = "127.0.0.1", peerport = 1215, globstat = globalstat, connstat = curstat }
-            local ok = c.tcp_connect(reactorobj, "raw", con, on_rawsock_client)
+            local ok = zce.tcp_connect(reactorobj, "raw", con, on_rawsock_client)
             lu.assertEquals(ok, true)
 
             if ok then
@@ -74,9 +74,9 @@ function TestRawSocket:test_tcp()
                 globalstat.conn_failed = globalstat.conn_failed + 1
             end
         end
-        c.usleep(200)
+        zce.usleep(200)
     end
-    c.usleep(3 * 1000)
+    zce.usleep(3 * 1000)
     lu.assertEquals( globalstat.conn_req, 100 )
     lu.assertEquals( globalstat.conn_count, 100 )
     lu.assertEquals( globalstat.conn_failed, 0 )
@@ -88,17 +88,17 @@ end
 
 
 function on_rawudp_client(con, event, data)
-    c.log(1, "\t", con.peerip, con.peerport, con.fd, event, data, call_count)
+    zce.log(1, "\t", con.peerip, con.peerport, con.fd, event, data, call_count)
 
     if event == "READ" then
         con.connstat.recv_bytes = con.connstat.recv_bytes + string.len(data)
         con.connstat.recvcall_count = con.connstat.recvcall_count + 1
-        c.udp_send(con, "nome\tend\nnome", 4, 9);
+        zce.udp_send(con, "nome\tend\nnome", 4, 9);
         if con.connstat.recvcall_count >= 20 then
-            c.udp_close(con)
+            zce.udp_close(con)
         end
     elseif event == "DISC" then
-        c.udp_close(con)
+        zce.udp_close(con)
     end
 
 end
@@ -109,16 +109,16 @@ function TestRawSocket:__test_udp()
         constatus = { recvcall_count = 0, recv_bytes = 0}
         con.connstat = constatus
 
-        local ok2, retcon = c.udp_listen("raw", "0.0.0.0", 0, on_rawudp_client, con)
+        local ok2, retcon = zce.udp_listen("raw", "0.0.0.0", 0, on_rawudp_client, con)
         retcon.peerip = "127.0.0.1"
         retcon.peerport = 1215
 
-        local ok = c.udp_send(retcon, "hello,world", 4, 9)
-        c.usleep(1 * 1000)
+        local ok = zce.udp_send(retcon, "hello,world", 4, 9)
+        zce.usleep(1 * 1000)
         lu.assertEquals(ok, true)
         lu.assertEquals( constatus.recv_bytes, 5 * 20 )
         --c.usleep(5 * 1000)
-        c.udp_close(retcon)
+        zce.udp_close(retcon)
     end
 end
 
