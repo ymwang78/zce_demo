@@ -178,3 +178,16 @@ function _M.getTimeId(idt, t)
         return 'year.' .. zce.time_strftime(t, '%Y')
     end
 end
+
+function _M.getPKCSKey(str)
+    local vec = zce.split(str, '\r\n')
+    local ispubkey = false
+    if vec[1] == '-----BEGIN PUBLIC KEY-----' then
+        ispubkey = true
+    elseif vec[1] == '-----BEGIN RSA PRIVATE KEY-----' then
+        ispubkey = false
+    else
+        return nil
+    end
+    return ispubkey, table.concat(vec, 1, 2, #vec - 1 )
+end

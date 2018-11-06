@@ -9,6 +9,7 @@ local cjson = require("cjson")
 local cfg = require("hawk.config")
 local hr = require("hawk.role.role")
 local hro = require("hawk.role.org")
+local hra = require("hawk.role.roleadmin")
 local session = require("hawk.auth.session")
 local dd = require("dian_device")
 
@@ -129,14 +130,6 @@ local function _getNextRoleId(orgid, father_roleid)
         return res[1].role_id + (2 << (level * 8))
     end
     return res[1].role_id + (1 << (level * 8))
-end
-
-
-function _M.getRoleNonAdminId(roleid)
-    if (not _isRoleIdAdmin(roleid)) then
-        return roleid
-    end
-    return _getRoleIdUpperLevel(roleid)
 end
 
 function _M._getRole2(orgid, roleid)
@@ -416,6 +409,7 @@ end
 -----------------------------------------------------------------------------------------------------
 
 -- 返回两个对象，第一个是具体设备的对象，第二个是角色对所有设备的集合对象
+-- { tablename : { orgid : { roleid ： { objeid : { indoor : true, ...}} }}}
 function _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
     zce.log(1, "|", "getRoleRightItem", objtable, orgid, roleid, objid, aclitem)
 
@@ -469,9 +463,9 @@ end
 function _M.getRoleRightRecur(objtable, orgid, roleid, objid, aclitem)
 
     -- global admin, just allow everything
-    if (_isRoleIdAdmin(roleid) and _getRoleIdUpperLevel(roleid) == 0) then
-        return { [aclitem] = true }
-    end
+    --if (_isRoleIdAdmin(roleid) and _getRoleIdUpperLevel(roleid) == 0) then
+    --    return { [aclitem] = true }
+    --end
 
     -- check self 
     local objitem, roleitem = _M.getRoleRightItem(objtable, orgid, roleid, objid, aclitem)
@@ -601,16 +595,6 @@ function _M.getUserRoleIdVec(iid, orgid)
     local roles = {}
 
     local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
-        "select objid from roles_acl_user where roleid = ? and orgid = ? order by roleid",
-        iid,
-        orgid)
-    if res and #res > 0 then
-        for i = 1, #res do
-            roles[res[i].objid] = true
-        end
-    end
-
-    local ok, res = zce.rdb_query(cfg.pgsqldb.dbobj, 
         "select roleid from roles_users where iid = ? and orgid = ? order by roleid",
         iid,
         orgid)
@@ -630,56 +614,36 @@ function _M.getUserRoleIdVec(iid, orgid)
     return roleids_vec
 end
 
-function _M.canAdminRole(iid, orgid, roleid)
-    zce.log(1, "|", "canAdminRole", iid, orgid, roleid)
-    -- if owner ,allow
-    local org = hro.getOrg(orgid)
-    if (org ~= nil and org.owneriid == iid) then
-        return true
-    end
-
-    -- roles_acl_user 特殊处理，useriid作为role, roleid作为obj
-    local acl, aclall = _M.getRoleRightItem('roles_acl_user', orgid, iid, roleid, '*')
-    zce.log(1, "|", "canAdminRole", iid, orgid, roleid, zce.tojson(acl, true), zce.tojson(aclall, true))
-
-    if acl ~= nil  then
-        if aclall == nil then return false; end
-        if aclall[roleid] == nil then return false; end
-        acl = aclall[roleid]
-    end
-
-    if acl ~= nil then return true; end
-
-    local level = _getRoleIdLevel(roleid)
-    if level == 0 then
-        return false
-    end
-
-    if aclall == nil then return false end
-
-    local mask = 0xffffffffffffffff >> ((8-level)*8)
-    for k, v in pairs(aclall) do
-        if ((v.objid & mask) == (roleid & mask)) then
-            return true
-        end
-    end
-
-    return false    
-end
-
 -- 查询用户在该组织的所有角色
 function _M.getUserOrgRoles2(iid, orgid, roles)
     zce.log(1, "|", "getUserOrgRoles2", "iid:" .. iid, "orgid:" .. orgid, "roles:" .. zce.tojson(roles, true))
 
-    local roleids = _M.getUserRoleIdVec(iid, orgid)
+    local org_roles = {}
+
+    local roleids = hra.getAdminRoleIdVec(iid, orgid)
     for i = 1, #roleids do
         local ok, role = _M.getRole2(orgid, roleids[i])
         if ok and role ~= nil then
-            if (_M.canAdminRole(iid, orgid, roleids[i])) then
-                role.isadmin = true
-            end
-            roles[#roles + 1] = role
+            role.isadmin = true
+            org_roles[role.roleid] = role
         end
+    end
+
+    local roleids = _M.getUserRoleIdVec(iid, orgid)
+    for i = 1, #roleids do
+        if org_roles[roleids[i]] == nil then
+            local ok, role = _M.getRole2(orgid, roleids[i])
+            if ok and role ~= nil then
+                if (hra.canAdminRole(iid, orgid, roleids[i])) then
+                    role.isadmin = true
+                end
+                org_roles[role.roleid] = role
+            end
+        end
+    end
+
+    for k,v in pairs(org_roles) do
+        roles[#roles + 1] = v
     end
 
     return true, roles
@@ -701,9 +665,9 @@ end
 
 -- 增加用户在该组织的角色
 function _M.addRoleUser(creatoriid, iid, orgid, roleid)
-    zce.log(1, "|", "addRoleUser", creatoriid, iid, orgid, roleid)
+    zce.log(1, "|", "addRoleUser", 'creatoriid:' .. creatoriid, 'iid:' .. iid, 'orgid:' .. orgid, 'roleid:' .. roleid)
     local roles = _M.getUserRoleIdVec(iid, orgid)
-    local allow = _M.canAdminRole(creatoriid, orgid, roleid)
+    local allow = hra.canAdminRole(creatoriid, orgid, roleid)
     if (not allow) then
         return false, "now allowed"
     end
@@ -735,7 +699,7 @@ function _M.delRoleUser(creatoriid, iid, orgid, roleid)
     end
 
     if (roleid == '*') then
-        local allow = _M.canAdminRole(creatoriid, orgid, 0)
+        local allow = hra.canAdminRole(creatoriid, orgid, 0)
         if (not allow) then
             return false, "now allowed"
         end
@@ -752,7 +716,7 @@ function _M.delRoleUser(creatoriid, iid, orgid, roleid)
         return true
     end
 
-    local allow = _M.canAdminRole(creatoriid, orgid, roleid)
+    local allow = hra.canAdminRole(creatoriid, orgid, roleid)
     if (not allow) then
         return false, "now allowed"
     end
@@ -791,7 +755,7 @@ function _M.getUserRoleRightAllitem(objtable, iid, orgid, aclitem, objitem_array
     end
 
     for i = 1, #roleids do
-        local isadmin = _M.canAdminRole(iid, orgid, roleids[i])
+        local isadmin = hra.canAdminRole(iid, orgid, roleids[i])
         _M.getRoleRightAllItemDict(objtable, orgid, roleids[i], aclitem, objitem_array)
     end
     return objitem_array

@@ -59,6 +59,81 @@ function TestListCompare:test_pack()
     lu.assertEquals( v10, "" )
 end
 
+function TestListCompare:test_rsa()
+    local pubkey = [[-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0qK4tCJMNbH+EqG7C+31
+PBCBbKzxG+s0Na1++a/lhcZmk/1Jme2OyNhRZDqoNPYaM/nlv0bqEQtZz2xE2OTU
+9ouY9Xea+sXzrSy+nXKpiIqXVsaR8MK6CwjhNuPfqcNRzxRA9BFhRw8ydbufoYKc
+zagE3//+o5wj4EDAGcxcqjJmmdiMNBNTsafSw+8ze3T4VjnGG/KHIs+kEEfGRqOv
+e5czBdgA+IWEkh2GA9SPKvOunuihFhmLxukAsiRhYwUVIZwWgpXNHR4ehqe6BbxE
+ygp/G7RknlGdzDAbDf9vI4pUN6FWkXaJ7lP6z8IwuxbOJ4ufgOPNqV62uN9YeGBM
+dwIDAQAB
+-----END PUBLIC KEY-----]]
+    local prikey = [[-----BEGIN RSA PRIVATE KEY-----
+MIIEpQIBAAKCAQEA0qK4tCJMNbH+EqG7C+31PBCBbKzxG+s0Na1++a/lhcZmk/1J
+me2OyNhRZDqoNPYaM/nlv0bqEQtZz2xE2OTU9ouY9Xea+sXzrSy+nXKpiIqXVsaR
+8MK6CwjhNuPfqcNRzxRA9BFhRw8ydbufoYKczagE3//+o5wj4EDAGcxcqjJmmdiM
+NBNTsafSw+8ze3T4VjnGG/KHIs+kEEfGRqOve5czBdgA+IWEkh2GA9SPKvOunuih
+FhmLxukAsiRhYwUVIZwWgpXNHR4ehqe6BbxEygp/G7RknlGdzDAbDf9vI4pUN6FW
+kXaJ7lP6z8IwuxbOJ4ufgOPNqV62uN9YeGBMdwIDAQABAoIBAQDRbi2MHZX8xY9D
+4z7ha6YsJJUrAwFwqvnsbScVCAmEa3JOrsbhn8wacsrqh0/76L7A8zW2a8ILVGfl
+z1bc+RmuUbqyRkv4D55rj1OvpPRf6Lz08NbmthbZJekX9JbMaoILDa5PfoBkcP3R
+Bc6Afid+bBL8zcHX10XskTTv8bwpE8oT9U6Y1XlX5q2wcPlA54F/aWxVPj7FFqme
+QyeJiPCE87dT3GAsEWp9U+61H2GHEtqNxq2Vu+mEzMzIm1gvE1O5U760cHTCVfL9
+YBr4lJDo+E759iLVUsKyVd1IjXQLRx/AT2jASuywZzRc94nUPIWiOSkhKqsjNFep
+T3CXA6NhAoGBAOs5giQxKhtJatjet+DZES8KHtgcduBdX0d6aE6VR7Eo7/hpMKEC
+jFpqfxyz+kJ9cTTknSidJR6wUE96B5CT7YmT5uAt8mhWxINinA/AE9DIZ5kxIeYk
+RPoOFT/M8AwMwpoi9tMnwPgCKJOBjkDGPEk0MNybyQhSimFj8bp3rCd/AoGBAOU9
+P8Jex1zD+vvlBF5/2I9+vfx39RQn6MnQhmG+mt4fuJWwIiFD73lwtMPvMP6vHG8G
+BuDnG9txGplr8GciSZPZK/3T6CoLwkzEOJOJwmhvMbymAzheKk8RTdggEnT6Lsea
+/Ze5rrryxyoYm7zOWesz/mab9BqLb7V1tmlzeZcJAoGBAI7xaaa4wc/HM8kKv09C
+WfDuA4Rs98istUPonQ50JRcBu6KHued+dvBTG1/D92cEeBEehGqz5GTb3FIP5Bz1
+6DncyUaeZVsGr3DwMcpYfTI5NsufUexbShdzC3K0BYQtFO06Jih3VgrgtOu+pUWz
+sdsCflbxzJ7kGffJFpKsOs/dAoGBAKahjPUmm9fshUYQxMpEOBCmWkdokvchw27f
+aq8mM8B+Ylg8fbKchThLGrrJ5V1bwFlbkihtFay/XExlT4xIOh+EXxvUqw/VGFlg
+0Jc+Ldhn60lriy+wEyUCOQl+1qu9J7/kA64EROSTkP4igSIPBQGY+7Vua1PYQ00t
+0Xh5fcqxAoGATgiNt+H/LtWwaGxc3aXr4d4egk3air0e+g+aRbOj5ddCZyROH8kV
+MMg3HzFEDlEjCxC6DSToQpqOVTUavhX4ZQhQjBKID+fgTBlv+2tNjBk3Qo2cAV/w
+b3WtDvZaDZq8kRGEwJeIGgwvwNHHGL2j7lrhh/in+NhJuZ6zjCXelRQ=
+-----END RSA PRIVATE KEY-----]]
+    --[[
+    local ispub, pubkey = util.getPKCSKey(pubkey)
+    lu.assertEquals(ispub, true)
+    local ispub, prikey = util.getPKCSKey(prikey)
+    lu.assertEquals(ispub, false)
+    zce.log(1, "|", "getPKCSKey", prikey)
+    --]]
+
+    local str_to_encrypt = "Hello, World!"
+
+    local ok, encdata = zce.encode_rsaprivate(str_to_encrypt, prikey)
+    lu.assertEquals(ok, true)
+    local ok, decdata = zce.decode_rsapublic(encdata, pubkey)
+    lu.assertEquals(ok, true)
+    lu.assertEquals(decdata, str_to_encrypt)
+
+    local ok, encdata = zce.encode_rsapublic(str_to_encrypt, pubkey)
+    lu.assertEquals(ok, true)
+    local ok, decdata = zce.decode_rsaprivate(encdata, prikey)
+    lu.assertEquals(ok, true)
+    lu.assertEquals(decdata, str_to_encrypt)
+
+    local encdata = [[iFITg2/eabPo00MNz6fl6YVoA3poCkGY3spkgwI8vgZInb06DpSVXEArIMCI1VmJUkQ3hw0qFsNL52Jyhb3/ISghtGhyHSW5TLMxrjtpoaVFBc4ejydezgyjVoCwiRBgglkej//AhOtWF2QSqvsZmPya6228lqSykX+JD6mDy0PsNyLSSmzrruQaIVxLycR7P7RpLIxIFiVXnazOHwAls1Y/6HWOTiu4e0zbiV7vj1Gi5Up81knN+rGy1EOikS8zvkwBrnlrq5LPeeJxDwbySjY4+ixtPfSvZlPFKeTG328rVXtJ9ODqwVzakLfDGexlCONDaIBsNBj7RYtdqCQmnw==]]
+    local pubkey=[[-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAql7uuwbciWtFBu+yp0El
+PCbxw0JMzN6ZqgkGelFM3T2DHt7xRPmGLCUsqh4zlUqWKB14APRnKc6/5ABb7BTQ
+NgyzS7c95jrx9ErXoZ6mq1f69xE6ZQJPensLGV3QnZS6AhQTnaQTmjlYTgDjVhzI
+ZQ4aBSyiy5fhOMDGGxWB3CS3FeNWR47e67SfytsyqxHrIL+FcRQQs+dv4lp7F9tX
+IcQGqeA1r3U0UyC6V5n0hLdH6q2ob7MDF5CgRkpNMTMwJUz1g/YE9TcGLxyamKI9
+kY+aVfwSYTICxee5VnQOGoIwvlw9yRoXvsKUw2pbkF0emq+sY11+RkI4aRVppWP0
+VQIDAQAB
+-----END PUBLIC KEY-----]]
+    local rawdata = zce.decode_base64(encdata)
+    local ok, decdata = zce.decode_rsapublic(rawdata, pubkey)
+    lu.assertEquals(ok, true)
+    -- zce.log(1, "|", decdata)
+end
+
 function TestListCompare:test_md5()
     v0 = zce.encode_md5("TestListCompare:test_md5") -- default lower case
     v1 = zce.encode_md5("TestListCompare:test_md5", false) -- output lower case
@@ -91,7 +166,7 @@ function TestListCompare:test_base64()
     v0 = zce.encode_base64(v)
     v1 = zce.decode_base64(v0)
     lu.assertEquals( v, v1 )
-    zce.dump_stack(v0, v1, v2)
+    -- zce.dump_stack(v0, v1, v2)
 end
 
 function TestListCompare:test_httpurl()
@@ -99,7 +174,7 @@ function TestListCompare:test_httpurl()
     v0 = zce.encode_httpurl(v)
     v1 = zce.decode_httpurl(v0)
     lu.assertEquals( v, v1 )
-    zce.dump_stack(v0, v1, v2)
+    -- zce.dump_stack(v0, v1, v2)
 end
 
 function TestListCompare:test_tojson()

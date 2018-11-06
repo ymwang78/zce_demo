@@ -48,14 +48,14 @@ end
 
 function _M.queryCoin(serialid, queryoffers, coinlockid)
     local rpcok, ok, res = zce.rpc_call(cfg.coinrpc.coinrpcid, "rpc_QueryCoin", serialid, queryoffers, coinlockid)
-    zce.log(1, "\t", "queryCoin:", rpcok, ok, res)
+    zce.log(1, "|", "queryCoin", rpcok, ok, zce.tojson(res, true))
     return ok, res
 end
 
 function _M.queryCoinOne(coinname, useridx, coinlockid)
     local ok, res = _M.queryCoin("", { {coinname = coinname, useridx = useridx} }, "")
-    if ok and res ~=nil and res.data ~= nil then
-        zce.log(1, "\t", "queryCoinOne:", ok, res.data[1])
+    if ok and res ~= nil and res.data ~= nil then
+        zce.log(1, "|", "queryCoinOne", ok, zce.tojson(res.data[1], true))
         return ok, res.data[1]
     end
     return false, nil

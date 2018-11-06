@@ -14,6 +14,9 @@ end
 function LOG_TRACE(...)
     zce.log(LOG_LV_TRACE, " ", ...)
 end
+function tableToJson(table)
+    return zce.tojson(table, true)
+end
 
 local function getTraceback()
     local traceback = string.split(debug.traceback("", 3), "\n")
@@ -122,6 +125,13 @@ end
 function checktable(value)
     if type(value) ~= "table" then value = {} end
     return value
+end
+
+function check2powers(num)
+    if((num > 0)and ((num &(num - 1)) == 0)) then
+        return true
+    end
+    return false
 end
 
 function isset(hashtable, key)
@@ -406,24 +416,63 @@ end
 return class_type
 end
 
-function gen_store_sql(tbl_name, mainkeys,data)
-    local sql = 'INSERT INTO ' .. tbl_name .. ' ( '
-    
-    --key
-    local i = 1
-    for k, v in pairs(data) do
-        if i == 1 then
-            sql = sql .. k
-        else
-            sql = sql .. ', ' .. k
-        end
-        i = i + 1
+function gen_store_sql(tbl_name, mainkeys, data)
+local sql = 'INSERT INTO ' .. tbl_name .. ' ( '
+
+--key
+local i = 1
+for k, v in pairs(data) do
+    if i == 1 then
+        sql = sql .. k
+    else
+        sql = sql .. ', ' .. k
     end
-    sql = sql .. ' ) VALUES ( '
+    i = i + 1
+end
+sql = sql .. ' ) VALUES ( '
+
+--values
+i = 1
+for k, v in pairs(data) do
+    local rel_val
+    if type(v) == 'string' then
+        rel_val = "\'" .. v .. "\'"
+    else
+        rel_val = v
+    end
     
-    --values
-    i = 1
-    for k, v in pairs(data) do
+    if i == 1 then
+        sql = sql .. rel_val
+    else
+        sql = sql .. ', ' .. rel_val
+    end
+    i = i + 1
+end
+sql = sql .. ' ) ON CONFLICT ('
+--main key
+i = 1
+for k, v in pairs(mainkeys) do
+    local rel_val
+    rel_val = k
+    -- if type(v) == 'string' then
+    --     rel_val = "\'" .. v .. "\'"
+    -- else
+    --     rel_val = v
+    -- end
+    
+    if i == 1 then
+        sql = sql .. rel_val
+    else
+        sql = sql .. ', ' .. rel_val
+    end
+    i = i + 1
+end
+sql = sql .. ') DO UPDATE SET '
+-- INSERT INTO tb_player_friend(player_id,friend_id,type) VALUES(?,?,?) ON CONFLICT (player_id,friend_id) DO UPDATE SET type = ?;
+--dumplicate
+i = 1
+for k, v in pairs(data) do
+    if(not mainkeys[key]) then
         local rel_val
         if type(v) == 'string' then
             rel_val = "\'" .. v .. "\'"
@@ -432,55 +481,16 @@ function gen_store_sql(tbl_name, mainkeys,data)
         end
         
         if i == 1 then
-            sql = sql .. rel_val
+            sql = sql .. k .. '=' .. rel_val
         else
-            sql = sql .. ', ' .. rel_val
+            sql = sql .. ', ' .. k .. '=' .. rel_val
         end
         i = i + 1
     end
-    sql = sql .. ' ) ON CONFLICT ('
-    --main key
-     i = 1
-    for k, v in pairs(mainkeys) do
-        local rel_val
-        rel_val = k
-        -- if type(v) == 'string' then
-        --     rel_val = "\'" .. v .. "\'"
-        -- else
-        --     rel_val = v
-        -- end
-        
-        if i == 1 then
-            sql = sql .. rel_val
-        else
-            sql = sql .. ', ' .. rel_val
-        end
-        i = i + 1
-    end
-    sql = sql .. ') DO UPDATE SET '
-    -- INSERT INTO tb_player_friend(player_id,friend_id,type) VALUES(?,?,?) ON CONFLICT (player_id,friend_id) DO UPDATE SET type = ?;
-    --dumplicate
-    i = 1
-    for k, v in pairs(data) do
-        if(not mainkeys[key]) then
-             local rel_val
-            if type(v) == 'string' then
-                rel_val = "\'" .. v .. "\'"
-            else
-                rel_val = v
-            end
-            
-            if i == 1 then
-                sql = sql .. k .. '=' .. rel_val
-            else
-                sql = sql .. ', ' .. k .. '=' .. rel_val
-            end
-             i = i + 1
-        end
-       
-    end
     
-    sql = sql .. ';'
-    
-    return sql
+end
+
+sql = sql .. ';'
+
+return sql
 end

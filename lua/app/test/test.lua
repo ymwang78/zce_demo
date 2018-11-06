@@ -9,7 +9,9 @@ function _M.test_me()
 
     cfg.setConfig()
     
-    zce.new_service("", "lua/app/test/test_pack.lua")
+    zce.new_service("W000", "lua/app/test/test_loadrunner.lua")
+
+    -- zce.new_service("", "lua/app/test/test_pack.lua")
 
     -- zce.new_service("", "lua/app/test/test_package.lua")
 
