@@ -1,4 +1,7 @@
+ZUA是ZCE的lua相关功能在服务端的一个实现，把ZCE的系统能力通过LUA接口提供出来。
+
 ZUA 示例和测试工程
+
 本EXE在WIN10上X64 Debug编译，由于是面向开发者，暂未提供Windows Release版本。
 
 详情参见  <a href="https://github.com/ymwang78/zua/wiki"> Wiki </a>。
