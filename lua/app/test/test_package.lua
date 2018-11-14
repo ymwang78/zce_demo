@@ -1,12 +1,29 @@
-local zce = require "zce.core"
+ï»¿local zce = require "zce.core"
 local lu = require('util.luaunit')
 local cfg = require('hawk.config')
 local hp = require('hawk.package.package')
 local hpexc = require('hawk.package.exclude')
+local hpeq = require('hawk.package.equipment')
 
 TestPackage = {}
 
-function TestPackage:test_exclude()
+function TestPackage:test_equitment()
+    local ok, eq = hpeq.addEquipment(1234, 10, 1, { name = 'è‹±é›„1', star = { 3, 70, 50, 100 }, level = 60})
+    lu.assertEquals(ok, true)
+
+    local ok = hpeq.updateEquipmentProperties(1234, 10, 1, { star = { 4, 73, 40, 89 }})
+    lu.assertEquals(ok, true)
+
+    local ok, eq = hpeq.getEquipmentByEquipmentId(1234, 10, 1);
+    lu.assertEquals(ok, true)
+    zce.log(1, "|", 1234, 10, 1, zce.tojson(eq, true))
+
+    local ok, eq = hpeq.delEquipment(1234, 10, 1)
+    lu.assertEquals(ok, true)
+
+end
+
+function TestPackage:__test_exclude()
 
     hpexc.clearExcludeCount('gift.hello', '20180101', 1)
 
@@ -31,9 +48,9 @@ function TestPackage:test_exclude()
     lu.assertEquals(ok, true)
 end
 
-function TestPackage:__test_package()
+function TestPackage:test_package()
 
-    -- Ôö¼ÓÒ»¸ö±³°üµÀ¾ß
+    -- å¢åŠ ä¸€ä¸ªèƒŒåŒ…é“å…·
     local ok, res = hp.addPackage(3, "Pet", { pkgid = 'dog001', pkgtype = 'dog', pkgnum = 1, foot = 4})
     lu.ensureEquals(ok, true)
     local ok, res = hp.addPackage(3, "Pet", { pkgid = 'cat001', pkgtype = 'cat', pkgnum = 1, foot = 4})
@@ -45,23 +62,23 @@ function TestPackage:__test_package()
         -- local ok, res = hp.addPackage(3, "Pet", { pkgid = 'cat' .. i, pkgtype = 'cat', pkgnum = 1, foot = 4})
         --lu.ensureEquals(ok, true)
     end
-    -- Ôö¼Ó»òÕßĞŞ¸ÄÒ»¸ö±³°üµÀ¾ßÊôĞÔ
+    -- å¢åŠ æˆ–è€…ä¿®æ”¹ä¸€ä¸ªèƒŒåŒ…é“å…·å±æ€§
     
     local ok, res = hp.updatePackageItem(3, "Pet", 'dog001', {eye = 3})
     lu.ensureEquals(ok, true)
     local ok, res = hp.updatePackageItem(3, "Pet", 'dog001', {ear = 4})
     lu.ensureEquals(ok, true)
 
-    -- É¾³ıÒ»¸ö±³°üµÀ¾ßÊôĞÔ
+    -- åˆ é™¤ä¸€ä¸ªèƒŒåŒ…é“å…·å±æ€§
     local ok, res = hp.deletePackageItem(3, "Pet", 'dog001', 'ear')
     lu.ensureEquals(ok, true)
 
-    -- É¾³ıÒ»¸öµÀ¾ß
+    -- åˆ é™¤ä¸€ä¸ªé“å…·
     local ok, res = hp.delPackage(3, "Pet", "cat001")
     lu.ensureEquals(ok, true)
 
-    -- ²éÑ¯±³°ü£¬Ã¿Ò³¼¸¸ö£¬µÚ¼¸Ò³£¬Ö»ĞèÒª×ÜÊı£¬µÚ0Ò³¼´¿É
-    -- filterÊÇ¹ıÂËÌõ¼ş£¬²»ÌîÊÇ²»¹ıÂË
+    -- æŸ¥è¯¢èƒŒåŒ…ï¼Œæ¯é¡µå‡ ä¸ªï¼Œç¬¬å‡ é¡µï¼Œåªéœ€è¦æ€»æ•°ï¼Œç¬¬0é¡µå³å¯
+    -- filteræ˜¯è¿‡æ»¤æ¡ä»¶ï¼Œä¸å¡«æ˜¯ä¸è¿‡æ»¤
     for i = 0,1 do
         local ok, res = hp.queryPackageItem(3, "Pet", 10, i, { pkgtype = 'dog'})
         lu.ensureEquals(ok, true)

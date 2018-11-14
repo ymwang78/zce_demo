@@ -150,7 +150,7 @@ function _M.addRoleAdmin(creatoriid, iid, orgid, roleid)
         auth_roleid = 0
     end
 
-    local allow = hr.canAdminRole(creatoriid, orgid, auth_roleid)
+    local allow = _M.canAdminRole(creatoriid, orgid, auth_roleid)
     if (not allow) then
         return false, "now allowed"
     end

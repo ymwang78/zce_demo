@@ -1,3 +1,7 @@
+ï»¿--[[
+    æœ¬æ¨¡å—å®ç°ç©å®¶èƒŒåŒ…ç³»ç»Ÿ
+--]]
+
 local modename = ...
 local _M = {}
 _G[modename] = _M
@@ -6,7 +10,7 @@ package.loaded[modename] = _M
 local zce = require("zce.core")
 local lu = require("util.luaunit")
 local cjson = require("cjson")
-local util = require("util")
+local util = require("util.util")
 local cfg = require("hawk.config")
 
 local __SQL_INITDB = [[
@@ -23,8 +27,8 @@ WITH (
 
 _M.addPackage_FIELD = {
     {"pkgid", "ID"},
-    {"pkgtype", "ÀàĞÍ"},
-    {"pkgnum", "ÊıÁ¿"},
+    {"pkgtype", "ç±»å‹"},
+    {"pkgnum", "æ•°é‡"},
 }
 
 if cfg.siteid == nil then
@@ -109,7 +113,7 @@ function _M.savePackage(iid, pkgcatalog, catalogobj)
     return ok, res
 end
 
--- Ôö¼Ó±³°üµÀ¾ß£¬Èç¹ûIDÖØ¸´£¬»áÔö¼ÓÆäÖĞµÄÊıÁ¿
+-- å¢åŠ èƒŒåŒ…é“å…·ï¼Œå¦‚æœIDé‡å¤ï¼Œä¼šå¢åŠ å…¶ä¸­çš„æ•°é‡
 function _M.addPackage(iid, pkgcatalog, pkgitem)
     local ok, catalogobj = _M.getPackage(iid, pkgcatalog)
     if not ok then
@@ -132,7 +136,7 @@ function _M.addPackage(iid, pkgcatalog, pkgitem)
     return ok, res
 end
 
--- É¾³ı±³°üÖĞµÄµÀ¾ß
+-- åˆ é™¤èƒŒåŒ…ä¸­çš„é“å…·
 function _M.delPackage(iid, pkgcatalog, pkgid)
     local ok, catalogobj = _M.getPackage(iid, pkgcatalog)
     if not ok or catalogobj == nil then
@@ -148,20 +152,20 @@ function _M.delPackage(iid, pkgcatalog, pkgid)
     return ok, res
 end
 
--- ĞŞ¸Ä±³°üµÀ¾ßÖĞµÄÏîÄ¿
+-- ä¿®æ”¹èƒŒåŒ…é“å…·ä¸­çš„é¡¹ç›®
 function _M.updatePackageItem(iid, pkgcatalog, pkgid, itemobj)
     local ok, catalogobj = _M.getPackage(iid, pkgcatalog)
     if not ok or catalogobj == nil or catalogobj[pkgid] == nil then
         zce.log(1, "|", ok, catalogobj)
         return false, "not exists"
     end
-    util.shallowMerge(catalogobj[pkgid], itemobj)
+    util.deepMerge(catalogobj[pkgid], itemobj)
     local ok, res = _M.savePackage(iid, pkgcatalog, catalogobj)
     zce.log(1, "|", ok, res)
     return ok, res
 end
 
--- É¾³ı±³°üµÀ¾ßÖĞµÄÏîÄ¿
+-- åˆ é™¤èƒŒåŒ…é“å…·ä¸­çš„é¡¹ç›®
 function _M.deletePackageItem(iid, pkgcatalog, pkgid, itemname)
     local ok, catalogobj = _M.getPackage(iid, pkgcatalog)
     if not ok or catalogobj == nil or catalogobj[pkgid] == nil then
@@ -174,8 +178,8 @@ function _M.deletePackageItem(iid, pkgcatalog, pkgid, itemname)
     return ok, res
 end
 
--- ²éÑ¯±³°üÏîÄ¿£¬Ã¿Ò³¼¸¸ö£¬µÚ¼¸Ò³£¬Ö»ĞèÒª×ÜÊı£¬µÚ0Ò³¼´¿É
--- filterÊÇ¹ıÂËÌõ¼ş£¬²»ÌîÊÇ²»¹ıÂË
+-- æŸ¥è¯¢èƒŒåŒ…é¡¹ç›®ï¼Œæ¯é¡µå‡ ä¸ªï¼Œç¬¬å‡ é¡µï¼Œåªéœ€è¦æ€»æ•°ï¼Œç¬¬0é¡µå³å¯
+-- filteræ˜¯è¿‡æ»¤æ¡ä»¶ï¼Œä¸å¡«æ˜¯ä¸è¿‡æ»¤
 function _M.queryPackageItem(iid, pkgcatalog, pageitems, pagenum, filter)
     local ok, catalogobj = _M.getPackage(iid, pkgcatalog)
     if not ok or catalogobj == nil then

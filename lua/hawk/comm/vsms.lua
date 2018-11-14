@@ -1,3 +1,7 @@
+﻿--[[
+    发送验证码
+--]]
+
 local modename = ...
 local _M = {}
 _G[modename] = _M

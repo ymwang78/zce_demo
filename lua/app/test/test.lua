@@ -5,15 +5,15 @@ _M = {}
 
 function _M.test_me()
 
-    zce.log(1, "\t", "...........start...........", s)
+    zce.log(1, "\t", "..........=开始=...........")
 
     cfg.setConfig()
     
-    zce.new_service("W000", "lua/app/test/test_loadrunner.lua")
+    -- zce.new_service("W000", "lua/app/test/test_loadrunner.lua")
 
     -- zce.new_service("", "lua/app/test/test_pack.lua")
 
-    -- zce.new_service("", "lua/app/test/test_package.lua")
+    zce.new_service("", "lua/app/test/test_package.lua")
 
     -- zce.new_service("test_protobuf", "lua/app/test/test_protobuf.lua")
 
