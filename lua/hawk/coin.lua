@@ -42,7 +42,7 @@ local cfg = require("hawk.config")
 
 function _M.tradeCoin(serialid, tradeid, tradetype, tradename, memo, tradeoffers, coinlockid, critisteps, endlock, allowneg)
     local rpcok, ok, res = zce.rpc_call(cfg.coinrpc.coinrpcid, "rpc_TradeCoin", serialid, tradeid, tradetype, tradename, memo, tradeoffers, coinlockid, critisteps, endlock, allowneg)
-    zce.log(1, "\t", "tradeCoin:", rpcok, ok, res)
+    zce.log(1, "|", "tradeCoin:", rpcok, ok, zce.tojson(res, true))
     return ok, res
 end
 

@@ -53,6 +53,18 @@ function _M.setConfig(cfg)
         cfg.pgsqldb.dbobj = pgdb
     end
 
+    if cfg.mysqldb ~= nil then
+        local connstr = cfg.mysqldb.user .. ":" .. cfg.mysqldb.pass .. 
+            "@" .. cfg.mysqldb.host .. ":" .. cfg.mysqldb.port .. "/" .. cfg.mysqldb.name
+        local tpoolobj = nil
+        if cfg.mysqldb.tpool then
+            tpoolobj = cfg.threadpool.tpoolobj
+        end
+        local ok, mydb = zce.rdb_conn("mysql", connstr, tpoolobj)
+        lu.ensureEquals(ok, true)
+        cfg.mysqldb.dbobj = mydb
+    end
+
     if cfg.redisdb ~= nil then
         local ok, redisip = zce.dns_resolve(cfg.redisdb.host)
         lu.ensureEquals(ok, true)

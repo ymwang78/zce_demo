@@ -6,7 +6,7 @@ package.loaded[modename] = _M
 local zce = require("zce.core")
 local lu = require("util.luaunit")
 local cjson = require("cjson")
-local util = require("util")
+local util = require("util.util")
 local cfg = require("hawk.config")
 local user = require("hawk.user")
 local session = require("hawk.auth.session")
@@ -37,7 +37,7 @@ function _M.pwdChallengeLogin(parameters)
     local now = zce.time_now();
 
     if math.abs(parameters.unixtime - now) > 300 then
-        return nil, "unixtime expire"
+        return nil, "unixtime expire:" .. math.abs(parameters.unixtime - now)
     end
 
     local secret = _get_appsecret(parameters.appid)
