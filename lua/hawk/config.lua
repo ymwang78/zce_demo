@@ -83,6 +83,10 @@ function _M.setConfig(cfg)
         end
     end
 
+    if cfg.stormclient ~= nil then
+        cfg.stormclient.ident = zce.storm_createident(cfg.siteid, cfg.stormclient.cseq, true, 'WT')
+    end
+
     zce.cache_set(hawkcfg, 0, "config", cfg)
 
     initConfig()

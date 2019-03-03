@@ -1,6 +1,6 @@
 local zce = require "zce.core"
 local cjson = require "cjson"
-local lu = require('util.luaunit')
+local lu = require('hawk.util.luaunit')
 
 TestHttpClient = {}
 
@@ -16,7 +16,8 @@ end
 
 function TestHttpClient:test_http_request()
 
-    -- local ok0, code0, param0, body0 = zce.http_request("GET", "https://api.weixin.qq.com/sns/jscode2session?appid=wxfbb7eac1a8aba846&secret=7ff7ac017e1c76cc5210271268156101&js_code=023Du4L51GJuSL1McbK51IrOK51Du4LL&grant_type=authorization_code", "")
+    local ok0, code0, param0, body0 = zce.http_request("GET", "https://api.weixin.qq.com/sns/jscode2session?appid=wxfbb7eac1a8aba846&secret=7ff7ac017e1c76cc5210271268156101&js_code=023Du4L51GJuSL1McbK51IrOK51Du4LL&grant_type=authorization_code", "")
+    zce.log(1, "|", body0)
 
     sendtable = { data = "hello, world"}
 

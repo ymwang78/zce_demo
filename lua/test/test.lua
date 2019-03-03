@@ -24,9 +24,9 @@ function _M.test_me()
     -- zce.new_service("test", "lua/app/test/test_cache.lua")
 
     -- zce.new_service("test_vmerr", "lua/app/test/test_vmerr.lua", tpool)
-    -- zce.new_service("", "lua/app/test/test_websocket_server.lua")
+    zce.new_service("", "lua/app/test/test_websocket_server.lua")
 
-    -- zce.new_service("", "lua/app/test/test_websocket_client.lua")
+    zce.new_service("", "lua/app/test/test_websocket_client.lua")
 end
 
 function _M.debug()

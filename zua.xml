@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-<zdlua>
-    <zdlua_info threadnum="0" loglevel="0" entry="main.lua" >
-    </zdlua_info>
-</zdlua>
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<zua>
+    <zua_info threadnum="0" loglevel="0" entry="ssocks/agent.lua" >
+    <!-- zua_info threadnum="0" loglevel="0" entry="test/test_http_client.lua" -->
+    <!-- zua_info threadnum="0" loglevel="0" entry="test/test_websocket_client.lua" -->
+    </zua_info>
+</zua>
