@@ -135,11 +135,21 @@ function onUpTcpEvent(con, event, data)
     end
 end
 
-
 local function main()
     zce.log(1, "\t", "...........start...........")
-    -- local ok1, obj1 = zce.tcp_listen("wssbin", "0.0.0.0", 21978, onSocksDownTcpEvent)
-    local ok1, obj1 = zce.tcp_listen("raw", "0.0.0.0", 21978, onSocksDownTcpEvent)
+
+    --[[  最简单的socks5代理
+        local ok, obj = zce.tcp_listen({
+            { proto = "tcp", host = "0.0.0.0",  port = 1080},
+        }, onSocksDownTcpEvent)
+    --]]
+
+    ---[[ tls->socks5代理
+    local ok, obj = zce.tcp_listen({
+            { proto = "tcp", host = "0.0.0.0",  port = 21443},
+            { proto = "ssl"},
+        }, onSocksDownTcpEvent)
+    --]]
 end
 
 main()
