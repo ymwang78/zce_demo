@@ -2,7 +2,7 @@ ZUA是ZCE的lua相关功能在服务端的一个实现，把ZCE的系统能力�
 
 ZUA 示例和测试工程
 
-本EXE在WIN10上X64 Debug编译，由于是面向开发者，暂未提供Windows Release版本。
+本EXE在WIN10上X64 Release编译。
 
 详情参见  <a href="https://github.com/ymwang78/zua/wiki"> Wiki </a>。
 
@@ -10,7 +10,7 @@ ZUA 示例和测试工程
 
 运行方法：
 
-1. 因为是DEBUG，需要VisualStudio 2017 debug运行时，最简单的办法直接安装Visual Studio 2017 Community版
+1. 需要VisualStudio 2017 Release运行时请自行下载安装。
 
 2. 双击执行start_server.bat 或者
 
