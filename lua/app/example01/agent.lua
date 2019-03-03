@@ -2,7 +2,8 @@ local zce = require("zce.core")
 local socks5 = require("ssocks.socks5")
 local _blackip_list = {}
 
-local _UP_ADDR = "127.0.0.1"
+--local _UP_ADDR = "127.0.0.1"
+local _UP_ADDR = "47.90.37.163"
 local _UP_PORT = 21443
 
 function onSocksDownTcpEvent(con, event, data)
@@ -16,8 +17,9 @@ function onSocksDownTcpEvent(con, event, data)
         con.upconn = { downcon = con, stat = 0, tosend = {} }
         local ok = zce.tcp_connect({
                 { proto = "tcp", host = _UP_ADDR,  port = _UP_PORT},
-                { proto = "ssl", verifyca = "zua.crt"},
-                -- { proto = "websocket", host = "echo.websocket.org", path = "/" , binary = false},
+                -- { proto = "ssl" }, -- 不验证
+                -- { proto = "ssl", verifyca = "ca.pem" }, -- 单项验证
+                { proto = "ssl", verifyca = "ca.pem", cert="client.pem", key="client.key" }, -- 双向验证提供证书
             }, 
             con.upconn,
             onUpTcpEvent) 
@@ -26,7 +28,7 @@ function onSocksDownTcpEvent(con, event, data)
         if (con.droped) then
             return
         end
-        zce.log(1, "|", "read", #data)
+        -- zce.log(1, "|", "read", #data)
         if con.upconn.stat == 0 then
             con.upconn.tosend[#con.upconn.tosend + 1] = data
             return
@@ -59,7 +61,7 @@ function onUpTcpEvent(con, event, data)
         end
         if con.downcon ~= nil then
             local ok = zce.tcp_send(con.downcon, data)
-            zce.log(1, "|", "tcp_recv<-remote", con.fd, ok, #data)
+            --zce.log(1, "|", "tcp_recv<-remote", con.fd, ok, #data)
         end
     elseif event == "DISC" then
         zce.tcp_close(con)

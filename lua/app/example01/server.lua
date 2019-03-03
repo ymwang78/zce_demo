@@ -1,6 +1,9 @@
 local zce = require("zce.core")
+zce.vm_addpath("lua/?.lua")
+
 local socks5 = require("ssocks.socks5")
 local _blackip_list = {}
+
 
 function onSocksDownTcpEvent(con, event, data)
     if event == "CONN" then
@@ -96,7 +99,7 @@ function onProcSocksData(con, data)
         local ok = zce.tcp_connect("tcp://" .. request.distAddress .. ":" .. request.distPort .. "/", con.upconn, onUpTcpEvent) 
     elseif con.state == ClientState.RequestHandled then
         local ok = zce.tcp_send(con.upconn, data)
-        zce.log(1, "|", "tcp_send->remote", con.fd, ok, #data)
+        -- zce.log(1, "|", "tcp_send->remote", con.fd, ok, #data)
     end
 end
 
@@ -124,7 +127,7 @@ function onUpTcpEvent(con, event, data)
         end
         if con.downcon ~= nil then
             local ok = zce.tcp_send(con.downcon, data)
-            zce.log(1, "|", "tcp_recv<-remote", con.fd, ok, #data)
+            -- zce.log(1, "|", "tcp_recv<-remote", con.fd, ok, #data)
         end
     elseif event == "DISC" then
         zce.tcp_close(con)
@@ -147,7 +150,8 @@ local function main()
     ---[[ tls->socks5代理
     local ok, obj = zce.tcp_listen({
             { proto = "tcp", host = "0.0.0.0",  port = 21443},
-            { proto = "ssl"},
+            -- { proto = "ssl", cert="server.pem", key="server.key"}, -- 不验证客户端
+            { proto = "ssl", verifyca="ca.pem", cert="server.pem", key="server.key"}, -- 双向验证，验证客户端
         }, onSocksDownTcpEvent)
     --]]
 end
