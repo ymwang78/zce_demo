@@ -3,8 +3,14 @@ local socks5 = require("ssocks.socks5")
 local _blackip_list = {}
 
 --local _UP_ADDR = "127.0.0.1"
-local _UP_ADDR = "47.90.37.163"
-local _UP_PORT = 21443
+--set your own ssocks host ip
+local _UP_ADDR = {
+	{"host1.ssocks", 21443},
+	{"host2.ssocks", 21443},
+	{"host3.ssocks", 21443}
+}
+
+local _UP_INDEX = 0
 
 function onSocksDownTcpEvent(con, event, data)
     if event == "CONN" then
@@ -15,8 +21,9 @@ function onSocksDownTcpEvent(con, event, data)
             return
         end
         con.upconn = { downcon = con, stat = 0, tosend = {} }
+		local addr = _UP_ADDR[_UP_INDEX % #_UP_ADDR + 1]
         local ok = zce.tcp_connect({
-                { proto = "tcp", host = _UP_ADDR,  port = _UP_PORT},
+                { proto = "tcp", host = addr[1],  port = addr[2]},
                 -- { proto = "ssl" }, -- 不验证
                 -- { proto = "ssl", verifyca = "ca.pem" }, -- 单项验证
                 { proto = "ssl", verifyca = "ca.pem", cert="client.pem", key="client.key" }, -- 双向验证提供证书
@@ -64,6 +71,9 @@ function onUpTcpEvent(con, event, data)
             --zce.log(1, "|", "tcp_recv<-remote", con.fd, ok, #data)
         end
     elseif event == "DISC" then
+		if con.stat == 0 then 
+			_UP_INDEX = _UP_INDEX + 1
+		end
         zce.tcp_close(con)
         if con.downcon ~= nil then
             zce.tcp_close(con.downcon)
