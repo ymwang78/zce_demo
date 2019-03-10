@@ -92,7 +92,7 @@ local function main()
     zce.log(1, "\t", "...........start...........")
 
     zce.tcp_listen({
-        { proto = "tcp", host = "127.0.0.1",  port = 2080},
+        { proto = "tcp", host = "0.0.0.0",  port = 2080},
     }, onSocksDownTcpEvent)
 
 end
