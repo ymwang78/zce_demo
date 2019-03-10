@@ -5,13 +5,11 @@ local _blackip_list = {}
 --local _UP_ADDR = "127.0.0.1"
 --set your own ssocks host ip
 local _UP_ADDR = {
-	{"host1.ssocks", 21443},
-	{"host1.ssocks", 21543},
-	{"host1.ssocks", 21643},
---	{"host2.ssocks", 21443},
---	{"host3.ssocks", 21443}
+	"host1.ssocks",
+	"host2.ssocks",
+	"host3.ssocks"
 }
-
+local _UP_PORT = {21443, 21543, 21643}
 local _UP_INDEX = 0
 
 function onSocksDownTcpEvent(con, event, data)
@@ -23,11 +21,11 @@ function onSocksDownTcpEvent(con, event, data)
             return
         end
         con.upconn = { downcon = con, stat = 0, tosend = {} }
-		local idx = math.random(#_UP_ADDR)
-		local addr = _UP_ADDR[idx]
-		zce.log(1, "|", "connectto", idx, addr[1], addr[2])
+		local addr = _UP_ADDR[_UP_INDEX % #_UP_ADDR + 1]
+		local port = _UP_PORT[math.random(#_UP_PORT)]
+		zce.log(1, "|", "connectto", idx, addr, port)
         local ok = zce.tcp_connect({
-                { proto = "tcp", host = addr[1],  port = addr[2]},
+                { proto = "tcp", host = addr,  port = port},
                 -- { proto = "ssl" }, -- 不验证
                 -- { proto = "ssl", verifyca = "ca.pem" }, -- 单项验证
                 { proto = "ssl", verifyca = "ca.pem", cert="client.pem", key="client.key" }, -- 双向验证提供证书
