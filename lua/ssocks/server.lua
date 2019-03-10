@@ -141,6 +141,7 @@ end
 local function main()
     zce.log(1, "\t", "...........start...........")
 
+    local listen_ports = {21443, 21543, 21643}
     --[[  最简单的socks5代理
         local ok, obj = zce.tcp_listen({
             { proto = "tcp", host = "0.0.0.0",  port = 1080},
@@ -148,11 +149,14 @@ local function main()
     --]]
 
     ---[[ tls->socks5代理
-    local ok, obj = zce.tcp_listen({
-            { proto = "tcp", host = "0.0.0.0",  port = 21443},
-            -- { proto = "ssl", cert="server.pem", key="server.key"}, -- 不验证客户端
-            { proto = "ssl", verifyca="ca.pem", cert="server.pem", key="server.key"}, -- 双向验证，验证客户端
-        }, onSocksDownTcpEvent)
+    for i, v in ipairs(listen_ports) do
+        local ok, obj1 = zce.tcp_listen({
+                { proto = "tcp", host = "0.0.0.0",  port = v },
+                -- { proto = "ssl", cert="server.pem", key="server.key"}, -- 不验证客户端
+                { proto = "ssl", verifyca="ca.pem", cert="server.pem", key="server.key"}, -- 双向验证，验证客户端
+				-- { proto = "websocket", binary=true },
+            }, onSocksDownTcpEvent)
+    end
     --]]
 end
 
