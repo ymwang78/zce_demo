@@ -22,9 +22,9 @@ ZUA 示例和测试工程
 
     rpm -ivh  http://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
-    rpm -ivh https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-centos94-9.4-3.noarch.rpm
+    rpm -ivh https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-7-x86_64/pgdg-centos11-11-2.noarch.rpm
     
-    yum install postgresql94-libs boost hiredis gperftools-libs mariadb-libs
+    yum install postgresql11-libs boost hiredis gperftools-libs mariadb-libs
     
 2. 程序 Linux 下载:
 
